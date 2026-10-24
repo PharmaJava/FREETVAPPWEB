@@ -1,0 +1,24 @@
+{
+  "name": "freetv-conector",
+  "version": "1.0.0",
+  "description": "FreeTV Conector: lo que la web de FreeTV necesita en tu ordenador para hablar con tu tele (buscarla e instalar FreeTV)",
+  "private": true,
+  "license": "MIT",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
+    "bundle": "bash scripts/build-bundle.sh",
+    "build": "node scripts/build-exe.js"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "ssh2": "1.17.0",
+    "tar-stream": "3.1.7",
+    "ws": "8.18.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11",
+    "postject": "1.0.0-alpha.6"
+  }
+}
