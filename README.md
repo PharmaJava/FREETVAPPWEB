@@ -3,8 +3,12 @@
 **Una página web para que cualquiera, sin saber nada de ordenadores, ponga [FreeTV](https://github.com/PharmaJava/FreeTV) en su tele LG
 solo con su móvil Android.**
 
-Le das la dirección de la web. Desde el móvil descargan la app FreeTV, eligen su tele, escriben el código que sale en la tele y pulsan
-**Instalar**. Sin ordenador. (También funciona desde un ordenador, con el Conector.)
+Le das la dirección de la web y eligen cómo hacerlo:
+
+- **Con el ordenador** (Windows o Mac): descargan un programa, lo abren y él les guía en el navegador hasta el final.
+- **Con el móvil Android**: descargan la app FreeTV y lo hacen todo desde el móvil.
+
+En los dos casos: eligen su tele, escriben el código que sale en la tele y pulsan **Instalar**. Sin terminal ni nada más que instalar.
 
 Web: **https://pharmajava.github.io/freetvappweb/**
 
@@ -20,7 +24,8 @@ eso la web es la puerta de entrada y quien habla con la tele es una app en el mi
 ```
 
 1. **La web** (`index.html`, `app.js`, `style.css` en la raíz, que es lo que sirve GitHub Pages): los pasos en español. Detecta el
-   aparato: en Android ofrece la app, en ordenador el Conector, en iPhone lo explica.
+   La portada pregunta «¿Con qué lo vas a hacer?» (ordenador o móvil Android) y da la descarga que toca. Si se elige un aparato
+   distinto del que se está usando (o se entra desde un iPhone), dice en qué aparato abrir la web.
 2. **La app de Android** (`android/`): muestra **la misma web** (va dentro de la app) y por debajo el instalador (`android/core`, Java),
    al que la web llama por un puente JavaScript (`window.FreeTVAndroid`) con la misma API que el Conector.
 3. **El Conector** (`connector/`): lo mismo para ordenador (Windows, Mac, Linux), en Node.

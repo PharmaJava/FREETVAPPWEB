@@ -8,7 +8,7 @@
   // Inside the Android app the installer is the app itself: the page asks it through window.FreeTVAndroid, not over http.
   var APP = !!window.FreeTVAndroid;
   var UA = navigator.userAgent;
-  var DEVICE = APP ? 'app'
+  var DEVICE = APP ? 'app' : API === '' ? 'local'
     : /iPhone|iPad|iPod/i.test(UA) || (/Macintosh/i.test(UA) && navigator.maxTouchPoints > 1) ? 'ios'
     : /Android/i.test(UA) ? 'android' : 'computer';
   var RELEASES = 'https://github.com/pharmajava/freetvappweb/releases/download/descargas/';
@@ -24,13 +24,14 @@
       '<li>Si Windows dice «Windows protegió su PC», pulsa <b>Más información</b> y luego <b>Ejecutar de todas formas</b> ' +
       '(sale porque es un programa pequeño y nuevo, sin firma de pago).</li>' +
       '<li>Si pregunta por el Firewall, pulsa <b>Permitir</b> (sirve para encontrar la tele en tu red).</li>' +
-      '<li>Se abre una ventana negra: déjala abierta y vuelve aquí.</li></ol>',
+      '<li>Se abre una ventana negra (déjala abierta mientras instalas) y los pasos siguen aquí, en el navegador.</li></ol>',
     macArm: '<ol><li>Abre el <b>.zip</b> descargado (doble clic): aparece <b>FreeTV-Conector</b>.</li>' +
       '<li>Haz <b>clic derecho → Abrir</b> sobre él y confirma <b>Abrir</b>. Si dice que no se puede verificar, ve a ' +
       '<b>Ajustes del Sistema → Privacidad y seguridad</b>, baja y pulsa <b>Abrir igualmente</b>.</li>' +
-      '<li>Se abre una ventana de Terminal: déjala abierta y vuelve aquí. Si el Mac pregunta por la <b>red local</b>, pulsa <b>Permitir</b>.</li></ol>',
+      '<li>Se abre una ventana de Terminal (déjala abierta mientras instalas) y los pasos siguen aquí, en el navegador. ' +
+      'Si el Mac pregunta por la <b>red local</b>, pulsa <b>Permitir</b>.</li></ol>',
     linux: '<ol><li>En una terminal, en la carpeta de descargas: <code>chmod +x FreeTV-Conector-Linux && ./FreeTV-Conector-Linux</code></li>' +
-      '<li>Déjala abierta y vuelve aquí.</li></ol>'
+      '<li>Déjala abierta mientras instalas: los pasos siguen aquí, en el navegador.</li></ol>'
   };
   HOWTO.macIntel = HOWTO.macArm;
 
@@ -52,7 +53,9 @@
   var current = 'start', history = [];
   function go(step, back) {
     // With the app or the Conector already there is nothing to do on step 3: pass it, forwards or backwards.
-    if (step === 'connector' && state.connected) step = current === 'find' ? 'prepare' : 'find';
+    if (step === 'connector' && (DEVICE === 'app' || DEVICE === 'local' || (state.connected && state.via === 'pc'))) {
+      step = current === 'brand' ? 'start' : 'brand';
+    }
     if (!back && step !== current) history.push(current);
     current = step;
     $$('.step').forEach(function (s) { s.hidden = s.getAttribute('data-step') !== step; });
@@ -68,7 +71,7 @@
     if (current === 'progress' && state.installing) return true;   // installing: stay on this screen
     var prev = history.pop();
     if (!prev) return false;
-    go(prev === 'connector' && state.connected ? 'prepare' : prev, true);
+    go(prev, true);
     return true;
   };
 
@@ -120,7 +123,7 @@
     var d = DOWNLOADS[os];
     var main = $('#dl-main');
     main.href = RELEASES + d.file;
-    main.textContent = 'Descargar el Conector para ' + d.label;
+    main.textContent = 'Descargar FreeTV para ' + d.label;
     $('#dl-links').innerHTML = Object.keys(DOWNLOADS).filter(function (k) { return k !== os; }).map(function (k) {
       return '<a href="#" data-os="' + k + '">' + esc(DOWNLOADS[k].label) + '</a>';
     }).join(' · ');
@@ -161,7 +164,7 @@
     var c = $('#conn');
     c.hidden = false;
     c.classList.toggle('on', on);
-    if (APP) { c.hidden = true; } else { $('#conn-text').textContent = on ? 'Conector abierto' : 'Conector cerrado'; }
+    if (APP) { c.hidden = true; } else { $('#conn-text').textContent = on ? 'Programa abierto' : 'Programa cerrado'; }
     $('#conn-wait').hidden = on;
     $('#conn-ok').hidden = !on;
     $('#to-find').disabled = !on;
@@ -176,28 +179,44 @@
       var was = state.connected;
       setConnected(info.app === 'freetv-conector', info);
       // Opened the Conector while on step 3: move on by itself.
-      if (!was && state.connected && current === 'connector') setTimeout(function () { if (current === 'connector') go('find'); }, 1200);
+      if (!was && state.connected && current === 'connector' && state.via === 'pc') {
+        setTimeout(function () { if (current === 'connector') go('brand'); }, 1200);
+      }
     }).catch(function () { if (state.connected) setConnected(false); }).then(function () { polling = false; });
   }
-  // Step 3 for each device: the app (Android phone), the Conector (computer) or why not yet (iPhone).
-  var GET_TITLE = { android: 'Descarga la app FreeTV', ios: 'En iPhone, todavía no', computer: 'Descarga y abre el Conector', app: 'Descarga la app FreeTV' };
-  $('#get-title').textContent = GET_TITLE[DEVICE];
-  $('#get-android').hidden = DEVICE !== 'android';
-  $('#get-ios').hidden = DEVICE !== 'ios';
-  $('#get-computer').hidden = DEVICE !== 'computer';
-  $('#to-find').hidden = DEVICE !== 'computer';
-  $('#dl-apk').href = APK;
-  if (DEVICE === 'computer') {
-    $('#ov-get').innerHTML = 'Descargas un pequeño programa, el <em>Conector</em>, y lo abres. (Con un móvil Android es aún más fácil: abre esta página en él.)';
-    $('#ov-note').innerHTML = 'Necesitas este ordenador conectado al <strong>mismo wifi</strong> que la tele.';
+  // The first screen: how to do it (computer or Android phone). Inside the app or the computer program there is nothing to choose.
+  var SITE = 'pharmajava.github.io/freetvappweb';
+  if (DEVICE === 'app' || DEVICE === 'local') {
+    $('#via-box').hidden = true;
+    $('#start-box').hidden = false;
   } else if (DEVICE === 'ios') {
-    $('#ov-note').innerHTML = '<strong>Ojo:</strong> en iPhone todavía no se puede instalar. Hace falta un móvil Android o un ordenador en el mismo wifi que la tele.';
-  } else if (DEVICE === 'app') {
-    $('#ov-get').hidden = true;
-    $('#ov-note').innerHTML = 'Tu móvil tiene que estar conectado al <strong>mismo wifi</strong> que la tele.';
+    $('#ov-note').innerHTML = 'En iPhone no se puede instalar: elige una de las dos y te decimos cómo. El ordenador o el móvil tiene que estar ' +
+      'en el <strong>mismo wifi</strong> que la tele.';
   }
+  // Step 1: the download for this device, or where to open this page instead.
+  function showGet() {
+    var v = state.via;
+    var pcHere = v === 'pc' && DEVICE === 'computer', androidHere = v === 'android' && DEVICE === 'android';
+    $('#get-android').hidden = !androidHere;
+    $('#get-computer').hidden = !pcHere;
+    $('#get-elsewhere').hidden = pcHere || androidHere;
+    $('#to-find').hidden = !pcHere;
+    $('#get-title').textContent = pcHere ? 'Descarga FreeTV para tu ordenador' : androidHere ? 'Descarga la app FreeTV'
+      : v === 'pc' ? 'Hazlo desde el ordenador' : 'Hazlo desde el móvil Android';
+    $('#elsewhere-text').textContent = v === 'pc'
+      ? 'Abre esta misma página en el ordenador (Windows o Mac) que esté en el mismo wifi que la tele. Escribe esta dirección en su navegador:'
+      : 'Abre esta misma página en el móvil Android que vayas a usar (mándate el enlace por WhatsApp o escríbelo en su navegador):';
+    $('#elsewhere-address').textContent = SITE;
+    $('#elsewhere-note').textContent = v === 'android' && DEVICE === 'ios' ? 'En iPhone la app no se puede instalar: Apple solo deja instalar apps de su App Store.' : '';
+  }
+  $$('[data-via]').forEach(function (b) {
+    b.addEventListener('click', function () { state.via = b.getAttribute('data-via'); save('via', state.via); showGet(); go('connector'); });
+  });
+  state.via = load('via') || (DEVICE === 'android' ? 'android' : 'pc');
+  showGet();
+  $('#dl-apk').href = APK;
   // Only the app and a computer (its Conector) can reach the TV: no point in asking on other phones.
-  if (DEVICE === 'app' || DEVICE === 'computer') {
+  if (DEVICE === 'app' || DEVICE === 'computer' || DEVICE === 'local') {
     setInterval(poll, APP ? 10000 : 2000);
     poll();
   }

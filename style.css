@@ -77,6 +77,9 @@ button, .big { font: inherit; cursor: pointer; }
 .logo.lg { background: #a50034; }
 .logo.samsung { background: #1428a0; }
 .logo.android { background: #2f7d57; }
+.logo.pc { background: #3b4a6b; }
+.sub { font-size: 20px; margin: 22px 0 10px; }
+.address { font-size: 22px; font-weight: 700; word-break: break-all; background: var(--wait-soft); border-radius: 14px; padding: 14px 16px; }
 
 .checklist { list-style: none; padding: 0; margin: 0 0 18px; counter-reset: c; }
 .checklist li { counter-increment: c; border-top: 1px solid var(--line); padding: 12px 0; }

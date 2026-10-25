@@ -113,6 +113,21 @@ jobs:
         run: |
           curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-darwin-x64.tar.gz" | tar xz -C "$RUNNER_TEMP"
           node scripts/build-exe.js --node "$RUNNER_TEMP/node-v$NODE_VERSION-darwin-x64/bin/node" --name Mac-Intel
+      - name: Check that it starts (Windows, Mac and Linux)
+        working-directory: connector/dist
+        shell: bash
+        run: |
+          exe=$(ls FreeTV-Conector-* | grep -v Intel | head -1)
+          echo "Starting $exe"
+          FREETV_NO_BROWSER=1 "./$exe" > started.log 2>&1 &
+          ok=
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:47321/api/hello | grep -q '"ready":true'; then ok=1; break; fi
+            sleep 1
+          done
+          cat started.log; rm -f started.log
+          if [ "$RUNNER_OS" = Windows ]; then taskkill //F //IM "$exe" || true; else kill %1 || true; fi
+          [ -n "$ok" ] || { echo "The Conector did not answer"; exit 1; }
       - name: Mac downloads as .zip (keeps the "can run" bit)
         if: runner.os == 'macOS'
         working-directory: connector/dist
@@ -122,13 +137,6 @@ jobs:
             (cd "zip-$arch" && zip -q -X "../FreeTV-Conector-Mac-$arch.zip" FreeTV-Conector)
             rm -rf "zip-$arch" "FreeTV-Conector-Mac-$arch"
           done
-      - name: Check that it starts
-        if: runner.os == 'Linux'
-        working-directory: connector/dist
-        run: |
-          FREETV_NO_BROWSER=1 ./FreeTV-Conector-Linux & sleep 3
-          curl -fsS http://127.0.0.1:47321/api/hello | grep '"ready":true'
-          kill %1
       - uses: actions/upload-artifact@v4
         with:
           name: download-${{ runner.os }}
