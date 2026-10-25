@@ -9,105 +9,50 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- Every text is in i18n.js (Spanish and English); data-t names it. The Spanish here is only what shows before the script runs. -->
 <header class="top">
   <div class="brand"><img src="icon.svg" alt="" width="32" height="32"> FreeTV</div>
-  <div id="conn" class="conn" hidden><span class="dot"></span><span id="conn-text">Conector</span></div>
+  <div class="top-right">
+    <div id="conn" class="conn" hidden><span class="dot"></span><span id="conn-text"></span></div>
+    <button id="lang" class="lang" type="button" data-t="lang.switch" data-t-aria="lang.switch.aria">English</button>
+  </div>
 </header>
 
 <main id="app">
 
   <!-- 0. Bienvenida -->
   <section class="step" data-step="start">
-    <h1>Una pantalla de inicio limpia para tu tele</h1>
-    <p class="lead">FreeTV cambia el inicio de la tele, lleno de anuncios, por uno sencillo: tus apps, el tiempo y sugerencias solo de lo que
-      tienes. No se rompe nada y <strong>todo se puede deshacer</strong>.</p>
+    <h1 data-t="start.h1">Una pantalla de inicio limpia para tu tele</h1>
+    <p class="lead" data-t="start.lead"></p>
     <div id="via-box">
-      <h2 class="sub">¿Con qué lo vas a hacer?</h2>
+      <h2 class="sub" data-t="via.q">¿Con qué lo vas a hacer?</h2>
       <div class="choices">
-        <button class="choice" data-via="pc"><span class="logo pc">💻</span><span>Con el ordenador<small>Windows o Mac. Descargas un
-          programa, lo abres y él te guía en todo.</small></span></button>
-        <button class="choice" data-via="android"><span class="logo android">📱</span><span>Con el móvil Android<small>Descargas la app
-          FreeTV y lo haces todo desde el móvil.</small></span></button>
+        <button class="choice" data-via="pc"><span class="logo pc">💻</span><span><span data-t="via.pc">Con un ordenador Windows</span>
+          <small data-t="via.pc.small"></small></span></button>
+        <button class="choice" data-via="android"><span class="logo android">📱</span><span><span data-t="via.android">Con el móvil Android</span>
+          <small data-t="via.android.small"></small></span></button>
       </div>
-      <p class="note" id="ov-note">El ordenador o el móvil tiene que estar en el <strong>mismo wifi</strong> que la tele. Tardas unos 10 minutos.</p>
+      <p class="note" id="ov-note" data-t="via.note"></p>
     </div>
     <div id="start-box" hidden>
       <ol class="overview">
-        <li>Eliges tu tele y la preparas (5 minutos, con el mando).</li>
-        <li>La buscamos en tu wifi, escribes un código que sale en la tele y pulsas <strong>Instalar</strong>.</li>
+        <li data-t="start.ol1"></li>
+        <li data-t="start.ol2"></li>
       </ol>
-      <p class="note">Tiene que estar en el <strong>mismo wifi</strong> que la tele.</p>
-      <button class="big primary" data-go="brand">Empezar</button>
+      <p class="note" data-t="start.note"></p>
+      <button class="big primary" data-go="brand" data-t="start.go">Empezar</button>
     </div>
   </section>
 
-  <!-- 1. Marca -->
-  <section class="step" data-step="brand" hidden>
-    <p class="crumb">Paso 2 de 5</p>
-    <h1>¿Qué tele tienes?</h1>
-    <p class="lead">Mira la marca en el marco de la tele o en el mando.</p>
-    <div class="choices">
-      <button class="choice" data-brand="lg"><span class="logo lg">LG</span><span>LG<small>webOS · funciona</small></span></button>
-      <button class="choice" data-brand="samsung"><span class="logo samsung">S</span><span>Samsung<small>todavía no automático</small></span></button>
-      <button class="choice" data-brand="android"><span class="logo android">▶</span><span>Android TV / Google TV<small>Sony, TCL, Xiaomi, Philips… · todavía no automático</small></span></button>
-    </div>
-    <button class="link" data-go="connector">← Volver</button>
-  </section>
-
-  <!-- 1b. Marcas sin instalación automática -->
-  <section class="step" data-step="other" hidden>
-    <h1 id="other-title">Todavía no</h1>
-    <div id="other-body"></div>
-    <button class="big" data-go="brand">← Elegir otra tele</button>
-  </section>
-
-  <!-- 2. Preparar la tele (LG) -->
-  <section class="step" data-step="prepare" hidden>
-    <p class="crumb">Paso 3 de 5</p>
-    <h1>Prepara la tele</h1>
-    <p class="lead">Esto se hace una sola vez. Ve marcando cada paso.</p>
-    <ol class="checklist">
-      <li><label><input type="checkbox"> <span><strong>Crea una cuenta de desarrollador de LG</strong> (gratis) en
-        <a href="https://webostv.developer.lge.com/" target="_blank" rel="noopener">webostv.developer.lge.com</a> → <em>Sign in</em> → <em>Create account</em>.
-        Créala <strong>con correo y contraseña</strong> (no con Google ni Apple).</span></label></li>
-      <li><label><input type="checkbox"> <span>En la tele, abre la <strong>LG Content Store</strong> (la tienda), busca <strong>Developer Mode</strong> e instálala.</span></label></li>
-      <li><label><input type="checkbox"> <span>Abre <strong>Developer Mode</strong> e inicia sesión con esa cuenta.</span></label></li>
-      <li><label><input type="checkbox"> <span>Pon <strong>Dev Mode Status</strong> en <strong>ON</strong>. La tele se reinicia: vuelve a abrir Developer Mode.</span></label></li>
-      <li><label><input type="checkbox"> <span>Activa <strong>Key Server</strong>. Verás la <strong>IP</strong> de la tele y una <strong>Passphrase</strong>
-        (6 letras y números). <strong>Deja esa pantalla abierta.</strong></span></label></li>
-    </ol>
-    <div class="tv-mock" aria-hidden="true">
-      <div class="tv-row"><span>Dev Mode Status</span><b>ON</b></div>
-      <div class="tv-row"><span>Key Server</span><b>ON</b></div>
-      <div class="tv-row"><span>IP</span><code>192.168.1.140</code></div>
-      <div class="tv-row"><span>Passphrase</span><code>A1B2C3</code></div>
-      <div class="tv-cap">Así se ve la app Developer Mode (con tus datos)</div>
-    </div>
-    <div class="row">
-      <button class="link" data-go="brand">← Volver</button>
-      <button class="big primary" data-go="find">Ya está, seguir</button>
-    </div>
-  </section>
-
-  <!-- 3. La app (Android), el Conector (ordenador) o la explicación (iPhone) -->
+  <!-- 1. La app (Android), el programa (ordenador) o dónde abrir la web -->
   <section class="step" data-step="connector" hidden>
-    <p class="crumb">Paso 1 de 5</p>
-    <h1 id="get-title">Descarga la app FreeTV</h1>
+    <p class="crumb" data-t="crumb.1">Paso 1 de 5</p>
+    <h1 id="get-title"></h1>
 
     <div id="get-android" hidden>
-      <p class="lead">Una página web no puede hablar con la tele. La app <strong>FreeTV</strong> sí: tiene estos mismos pasos y además
-        llega a la tele por el wifi. Es gratis y ocupa unos 5 MB.</p>
-      <a id="dl-apk" class="big primary download" href="#">Descargar la app FreeTV</a>
-      <div class="howto">
-        <ol>
-          <li>Pulsa el botón. Si el móvil avisa de que el archivo puede ser dañino, pulsa <b>Descargar de todas formas</b>.</li>
-          <li>Abre <b>FreeTV-Android.apk</b> desde el aviso de descarga (o en <b>Archivos → Descargas</b>).</li>
-          <li>Si dice que no puedes instalar apps de esta fuente: pulsa <b>Ajustes</b>, activa <b>Permitir de esta fuente</b> y vuelve atrás.</li>
-          <li>Pulsa <b>Instalar</b>. Si sale <em>Google Play Protect</em>: <b>Más detalles → Instalar de todas formas</b>
-            (sale con cualquier app que no viene de Google Play).</li>
-          <li>Pulsa <b>Abrir</b> y sigue allí: la app te lleva directa a buscar tu tele.</li>
-        </ol>
-      </div>
+      <p class="lead" data-t="get.android.lead"></p>
+      <a id="dl-apk" class="big primary download" href="#" data-t="get.android.button"></a>
+      <div class="howto"><ol data-t="get.android.howto"></ol></div>
     </div>
 
     <div id="get-elsewhere" hidden>
@@ -117,131 +62,163 @@
     </div>
 
     <div id="get-computer" hidden>
-      <p class="lead">Una página web no puede hablar con la tele. Este programa pequeño sí. No se instala: lo abres, te guía paso a paso
-        en el navegador, instala FreeTV en la tele y lo cierras.</p>
-      <div id="conn-wait" class="status wait"><span class="spinner"></span> <span>Esperando a que abras el programa…</span></div>
-      <div id="conn-ok" class="status ok" hidden>✓ <span>¡Programa abierto! Seguimos.</span></div>
+      <p class="lead" data-t="get.pc.lead"></p>
+      <div id="conn-wait" class="status wait"><span class="spinner"></span> <span data-t="get.pc.wait"></span></div>
+      <div id="conn-ok" class="status ok" hidden>✓ <span id="conn-ok-text" data-t="get.pc.ok"></span></div>
       <div id="download-box">
-        <a id="dl-main" class="big primary download" href="#">Descargar el Conector</a>
-        <p class="small" id="dl-other">Otros sistemas: <span id="dl-links"></span></p>
-        <div id="howto" class="howto"></div>
+        <a id="dl-main" class="big primary download" href="#"></a>
+        <p class="small" id="dl-other"><span data-t="get.pc.other"></span> <span id="dl-links"></span></p>
+        <div class="howto"><ol id="howto"></ol></div>
       </div>
       <details class="small">
-        <summary>Ya lo abrí y aquí no pasa nada</summary>
-        <p>El propio programa abre el asistente en una pestaña nueva del navegador (dirección <code>127.0.0.1:47321</code>): sigue allí.
-          Si no se abre solo, <a href="http://127.0.0.1:47321/" target="_blank" rel="noopener">pulsa aquí</a>. Si el navegador pregunta si esta
-          página puede acceder a dispositivos o apps de tu red local, pulsa <strong>Permitir</strong>.</p>
+        <summary data-t="get.pc.stuck"></summary>
+        <p data-t="get.pc.stuck.body"></p>
       </details>
     </div>
 
     <div class="row">
-      <button class="link" data-go="start">← Volver</button>
-      <button class="big primary" id="to-find" data-go="brand" disabled hidden>Seguir</button>
+      <button class="link" data-go="start" data-t="back">← Volver</button>
+      <button class="big primary" id="to-find" data-go="brand" disabled hidden data-t="next">Seguir</button>
+    </div>
+  </section>
+
+  <!-- 2. Marca -->
+  <section class="step" data-step="brand" hidden>
+    <p class="crumb" data-t="crumb.2">Paso 2 de 5</p>
+    <h1 data-t="brand.h1">¿Qué tele tienes?</h1>
+    <p class="lead" data-t="brand.lead"></p>
+    <div class="choices">
+      <button class="choice" data-brand="lg"><span class="logo lg">LG</span><span>LG<small data-t="brand.lg"></small></span></button>
+      <button class="choice" data-brand="samsung"><span class="logo samsung">S</span><span>Samsung<small data-t="brand.later"></small></span></button>
+      <button class="choice" data-brand="android"><span class="logo android">▶</span><span>Android TV / Google TV<small data-t="brand.atv"></small></span></button>
+    </div>
+    <button class="link" data-go="connector" data-t="back">← Volver</button>
+  </section>
+
+  <!-- 2b. Marcas sin instalación automática -->
+  <section class="step" data-step="other" hidden>
+    <h1 id="other-title"></h1>
+    <div id="other-body"></div>
+    <button class="big" data-go="brand" data-t="other.back">← Elegir otra tele</button>
+  </section>
+
+  <!-- 3. Preparar la tele (LG) -->
+  <section class="step" data-step="prepare" hidden>
+    <p class="crumb" data-t="crumb.3">Paso 3 de 5</p>
+    <h1 data-t="prep.h1">Prepara la tele</h1>
+    <p class="lead" data-t="prep.lead"></p>
+    <ol class="checklist">
+      <li><label><input type="checkbox"> <span data-t="prep.1"></span></label></li>
+      <li><label><input type="checkbox"> <span data-t="prep.2"></span></label></li>
+      <li><label><input type="checkbox"> <span data-t="prep.3"></span></label></li>
+      <li><label><input type="checkbox"> <span data-t="prep.4"></span></label></li>
+      <li><label><input type="checkbox"> <span data-t="prep.5"></span></label></li>
+    </ol>
+    <div class="tv-mock" aria-hidden="true">
+      <div class="tv-row"><span>Dev Mode Status</span><b>ON</b></div>
+      <div class="tv-row"><span>Key Server</span><b>ON</b></div>
+      <div class="tv-row"><span>IP</span><code>192.168.1.140</code></div>
+      <div class="tv-row"><span>Passphrase</span><code>A1B2C3</code></div>
+      <div class="tv-cap" data-t="prep.cap"></div>
+    </div>
+    <div class="row">
+      <button class="link" data-go="brand" data-t="back">← Volver</button>
+      <button class="big primary" data-go="find" data-t="prep.next">Ya está, seguir</button>
     </div>
   </section>
 
   <!-- 4. Buscar la tele -->
   <section class="step" data-step="find" hidden>
-    <p class="crumb">Paso 4 de 5</p>
-    <h1>¿Cuál es tu tele?</h1>
-    <div id="scan-status" class="status wait"><span class="spinner"></span> <span>Buscando teles en tu red…</span></div>
+    <p class="crumb" data-t="crumb.4">Paso 4 de 5</p>
+    <h1 data-t="find.h1">¿Cuál es tu tele?</h1>
+    <div id="scan-status" class="status wait"></div>
     <div id="tv-list" class="tv-list"></div>
     <details id="manual" class="manual">
-      <summary>No sale, o quiero escribir la IP</summary>
-      <p class="small">La IP aparece en la app Developer Mode de la tele (por ejemplo <code>192.168.1.140</code>).</p>
+      <summary data-t="find.manual"></summary>
+      <p class="small" data-t="find.manual.help"></p>
       <div class="row inline">
-        <input id="ip" inputmode="decimal" placeholder="192.168.1.140" autocomplete="off" aria-label="IP de la tele">
-        <button id="check-ip" class="big">Usar esta IP</button>
+        <input id="ip" inputmode="decimal" placeholder="192.168.1.140" autocomplete="off" data-t-aria="find.ip.aria">
+        <button id="check-ip" class="big" data-t="find.use">Usar esta IP</button>
       </div>
       <p id="ip-msg" class="small"></p>
     </details>
     <div class="row">
-      <button class="link" data-go="prepare">← Volver</button>
-      <button class="link" id="rescan">Buscar otra vez</button>
+      <button class="link" data-go="prepare" data-t="back">← Volver</button>
+      <button class="link" id="rescan" data-t="find.rescan">Buscar otra vez</button>
     </div>
   </section>
 
   <!-- 5. Datos -->
   <section class="step" data-step="details" hidden>
-    <p class="crumb">Paso 5 de 5</p>
-    <h1>Último paso</h1>
+    <p class="crumb" data-t="crumb.5">Paso 5 de 5</p>
+    <h1 data-t="details.h1">Último paso</h1>
     <p class="lead" id="chosen-tv"></p>
 
     <label class="field">
-      <span class="label">Passphrase de la tele</span>
-      <span class="help">Las 6 letras y números que ves en la app Developer Mode, junto a «Passphrase».</span>
+      <span class="label" data-t="pass.label"></span>
+      <span class="help" data-t="pass.help"></span>
       <input id="pass" class="code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="A1B2C3">
     </label>
 
     <label class="field">
-      <span class="label">Tu ciudad</span>
-      <span class="help">Para el tiempo y para oscurecer la pantalla de noche.</span>
-      <input id="city" placeholder="Sevilla" autocomplete="off">
+      <span class="label" data-t="city.label"></span>
+      <span class="help" data-t="city.help"></span>
+      <input id="city" autocomplete="off" data-t-placeholder="city.placeholder">
     </label>
     <div id="city-results" class="city-results"></div>
 
     <fieldset class="field">
-      <legend class="label">¿Dónde tienes cuenta?</legend>
-      <span class="help">Las sugerencias de películas y series saldrán solo de estas. Desmarca las que <strong>no</strong> tienes.</span>
+      <legend class="label" data-t="accounts.label"></legend>
+      <span class="help" data-t="accounts.help"></span>
       <div id="services" class="services"></div>
     </fieldset>
 
     <details class="field">
-      <summary>Opciones avanzadas (no hace falta tocarlas)</summary>
+      <summary data-t="adv"></summary>
       <label class="field">
-        <span class="label">Clave de TMDB (opcional)</span>
-        <span class="help">Para las sugerencias de películas y series. Gratis en
-          <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a> → Ajustes → API.
-          Sin ella todo funciona, pero sin sugerencias.</span>
+        <span class="label" data-t="tmdb.label"></span>
+        <span class="help" data-t="tmdb.help"></span>
         <input id="tmdb" autocomplete="off" spellcheck="false">
       </label>
-      <label class="check"><input type="checkbox" id="hideAnimation"> Sin dibujos animados ni anime en las sugerencias</label>
-      <label class="check"><input type="checkbox" id="showCrypto" checked> Mostrar cotizaciones (Bitcoin, S&amp;P 500…)</label>
-      <label class="check"><input type="checkbox" id="store"> <span>Instalar apps de la comunidad desde la propia tele, sin ordenador.
-        <span class="help">Guarda en la tele la llave del Modo Desarrollador de esa misma tele, en una carpeta que solo lee la tienda de FreeTV.
-          Si no lo marcas, todo lo demás funciona igual.</span></span></label>
+      <label class="check"><input type="checkbox" id="hideAnimation"> <span data-t="opt.anim"></span></label>
+      <label class="check"><input type="checkbox" id="showCrypto" checked> <span data-t="opt.crypto"></span></label>
+      <label class="check"><input type="checkbox" id="store"> <span><span data-t="opt.store"></span>
+        <span class="help" data-t="opt.store.help"></span></span></label>
     </details>
 
     <p id="details-msg" class="error" hidden></p>
     <div class="row">
-      <button class="link" data-go="find">← Volver</button>
-      <button class="big primary" id="install">Instalar FreeTV</button>
+      <button class="link" data-go="find" data-t="back">← Volver</button>
+      <button class="big primary" id="install" data-t="install">Instalar FreeTV</button>
     </div>
   </section>
 
   <!-- 6. Instalando -->
   <section class="step" data-step="progress" hidden>
-    <h1 id="progress-title">Instalando…</h1>
+    <h1 id="progress-title"></h1>
     <div id="prompt" class="prompt" hidden>
       <div class="prompt-icon">📺</div>
-      <div><strong>Mira la tele.</strong> Sale un aviso: pulsa <strong>Aceptar</strong> (o <em>Allow</em>) con el mando.</div>
+      <div data-t="progress.prompt"></div>
     </div>
     <ol id="steps" class="steps"></ol>
     <div id="done" hidden>
-      <div class="status ok big-ok">🎉 <span>¡FreeTV está en tu tele!</span></div>
-      <ul class="tips">
-        <li>Pulsa <strong>Home</strong> en el mando: verás FreeTV.</li>
-        <li>Si algo se ve raro, <strong>mantén Home 2 segundos</strong> y vuelves al inicio de LG.</li>
-        <li>El Modo Desarrollador de LG caduca a los ~40 días: abre de vez en cuando la app <em>Developer Mode</em> y pulsa <strong>EXTEND</strong>.
-          Si caduca, vuelve a esta página y repite (tarda 2 minutos).</li>
-        <li>Ya puedes cerrar el Conector. En la tele puedes desactivar el <em>Key Server</em>.</li>
-      </ul>
+      <div class="status ok big-ok">🎉 <span data-t="progress.done"></span></div>
+      <ul class="tips" data-t="progress.tips"></ul>
     </div>
     <div id="failed" hidden>
       <div class="status bad"><span>✗</span> <span id="fail-msg"></span></div>
       <div class="row">
-        <button class="big primary" id="retry">Volver a intentarlo</button>
+        <button class="big primary" id="retry" data-t="progress.retry">Volver a intentarlo</button>
       </div>
     </div>
-    <details class="small"><summary>Ver detalles</summary><pre id="log" class="log"></pre></details>
+    <details class="small"><summary data-t="progress.details"></summary><pre id="log" class="log"></pre></details>
   </section>
 </main>
 
 <footer class="foot">
-  <p>FreeTV es libre (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">Código de FreeTV</a> ·
-    <a href="https://github.com/pharmajava/freetvappweb" target="_blank" rel="noopener">Código de esta web</a> ·
-    No está afiliado a LG. Tus datos no salen de tu casa: la passphrase solo va de tu móvil (o tu ordenador) a la tele.</p>
+  <p data-t="footer"></p>
 </footer>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

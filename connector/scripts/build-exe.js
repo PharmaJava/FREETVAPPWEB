@@ -4,7 +4,7 @@
  * Builds FreeTV Conector as one executable for this computer's system (Node's single executable applications): the
  * program, the web page and FreeTV's packages all inside, so the person downloads one file and opens it.
  *
- *   node scripts/build-exe.js        ->  dist/FreeTV-Conector-<system>[.exe]
+ *   node scripts/build-exe.js        ->  dist/FreeTV-<system>[.exe]   (FreeTV-Windows.exe, FreeTV-Mac-AppleSilicon, FreeTV-Linux)
  *   node scripts/build-exe.js --node path/to/other/node --name Mac-Intel
  *        the same with another Node binary of the same version (the Intel Mac one, built on an Apple Silicon Mac)
  *
@@ -17,12 +17,12 @@ const { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const SITE = path.join(ROOT, '..');   // the web page lives at the repository's root (GitHub Pages)
-const SITE_FILES = ['index.html', 'app.js', 'style.css', 'icon.svg'];
+const SITE_FILES = ['index.html', 'i18n.js', 'app.js', 'style.css', 'icon.svg'];
 const BUNDLE = path.join(ROOT, 'bundle');
 const NAMES = { win32: 'Windows', darwin: process.arch === 'arm64' ? 'Mac-AppleSilicon' : 'Mac-Intel', linux: 'Linux' };
 const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : null; };
 const NODE = arg('--node') || process.execPath;
-const out = path.join(DIST, 'FreeTV-Conector-' + (arg('--name') || NAMES[process.platform]) + (process.platform === 'win32' ? '.exe' : ''));
+const out = path.join(DIST, 'FreeTV-' + (arg('--name') || NAMES[process.platform]) + (process.platform === 'win32' ? '.exe' : ''));
 
 function run(cmd, args) { console.log('$', cmd, args.join(' ')); execFileSync(cmd, args, { stdio: 'inherit', cwd: ROOT }); }
 
@@ -48,9 +48,22 @@ fs.writeFileSync(path.join(DIST, 'sea-config.json'), JSON.stringify({
 }, null, 1));
 run(process.execPath, ['--experimental-sea-config', path.join(DIST, 'sea-config.json')]);
 
-// 3. A copy of this Node with the blob injected.
+// 3. A copy of this Node with the blob injected. On Windows it first gets FreeTV's name, icon and version (what Explorer, the taskbar and
+//    Windows' warnings show), before the blob goes in.
 fs.copyFileSync(NODE, out);
 fs.chmodSync(out, 0o755);
+if (process.platform === 'win32') {
+  const version = require('../package.json').version;
+  execFileSync(require.resolve('rcedit/bin/rcedit-x64.exe'), [out,
+    '--set-icon', path.join(ROOT, 'assets', 'freetv.ico'),
+    '--set-file-version', version, '--set-product-version', version,
+    '--set-version-string', 'ProductName', 'FreeTV',
+    '--set-version-string', 'FileDescription', 'FreeTV: instala FreeTV en tu tele LG / installs FreeTV on your LG TV',
+    '--set-version-string', 'CompanyName', 'FreeTV',
+    '--set-version-string', 'OriginalFilename', path.basename(out),
+    '--set-version-string', 'InternalName', 'FreeTV',
+    '--set-version-string', 'LegalCopyright', 'MIT License'], { stdio: 'inherit' });
+}
 if (process.platform === 'darwin') run('codesign', ['--remove-signature', out]);
 const postject = [require.resolve('postject/dist/cli.js'), out, 'NODE_SEA_BLOB', path.join(DIST, 'sea-prep.blob'),
   '--sentinel-fuse', 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2'];

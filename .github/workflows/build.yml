@@ -1,7 +1,7 @@
 # Builds everything and publishes the downloads (GitHub Pages serves the web page itself straight from main's root):
 #   - FreeTV's packages for LG, from PharmaJava/FreeTV (FREETV_REF), the same way FreeTV's install.sh builds them,
 #   - the Android app (android/), with those packages and the web page inside,
-#   - FreeTV Conector for Windows, macOS (Apple Silicon and Intel) and Linux, with the same inside,
+#   - FreeTV for Windows (the computer program, also for macOS and Linux), with the same inside,
 #   - all of them on the release "descargas", the one the web page links to.
 # Runs on every push to main, and by hand (Actions → Build and publish → Run workflow) to pick up a new FreeTV.
 name: Build and publish
@@ -117,7 +117,7 @@ jobs:
         working-directory: connector/dist
         shell: bash
         run: |
-          exe=$(ls FreeTV-Conector-* | grep -v Intel | head -1)
+          exe=$(ls FreeTV-* | grep -v Intel | head -1)
           echo "Starting $exe"
           FREETV_NO_BROWSER=1 "./$exe" > started.log 2>&1 &
           ok=
@@ -133,9 +133,9 @@ jobs:
         working-directory: connector/dist
         run: |
           for arch in AppleSilicon Intel; do
-            mkdir -p "zip-$arch" && cp "FreeTV-Conector-Mac-$arch" "zip-$arch/FreeTV-Conector"
-            (cd "zip-$arch" && zip -q -X "../FreeTV-Conector-Mac-$arch.zip" FreeTV-Conector)
-            rm -rf "zip-$arch" "FreeTV-Conector-Mac-$arch"
+            mkdir -p "zip-$arch" && cp "FreeTV-Mac-$arch" "zip-$arch/FreeTV"
+            (cd "zip-$arch" && zip -q -X "../FreeTV-Mac-$arch.zip" FreeTV)
+            rm -rf "zip-$arch" "FreeTV-Mac-$arch"
           done
       - uses: actions/upload-artifact@v4
         with:
@@ -165,3 +165,7 @@ jobs:
               --notes "La app de Android y el Conector para ordenador. Empieza en la web: https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/"
           fi
           gh release upload "$RELEASE_TAG" downloads/* --clobber
+          # Files of earlier builds that are no longer made (renamed ones) go away, so the page never links to an old one.
+          for old in $(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name'); do
+            [ -e "downloads/$old" ] || gh release delete-asset "$RELEASE_TAG" "$old" -y
+          done

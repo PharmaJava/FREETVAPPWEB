@@ -1,9 +1,10 @@
-/* FreeTV web installer: the steps on screen, and the calls to FreeTV Conector (the program on this computer that talks to the TV). */
+/* FreeTV web installer: the steps on screen, and the calls to whatever talks to the TV: the Windows/Mac program (FreeTV Conector,
+   at 127.0.0.1:47321) or, inside the Android app, the app itself. Texts are in i18n.js (Spanish and English). */
 (function () {
   'use strict';
 
   var LOCAL = 'http://127.0.0.1:47321';
-  // Served by the Conector itself (Safari, or when the page on GitHub cannot reach this computer): same address, no CORS.
+  // Served by the computer program itself (Safari, or when the page on GitHub cannot reach it): same address, no CORS.
   var API = location.origin === LOCAL || location.origin === 'http://localhost:47321' ? '' : LOCAL;
   // Inside the Android app the installer is the app itself: the page asks it through window.FreeTVAndroid, not over http.
   var APP = !!window.FreeTVAndroid;
@@ -11,37 +12,22 @@
   var DEVICE = APP ? 'app' : API === '' ? 'local'
     : /iPhone|iPad|iPod/i.test(UA) || (/Macintosh/i.test(UA) && navigator.maxTouchPoints > 1) ? 'ios'
     : /Android/i.test(UA) ? 'android' : 'computer';
-  var RELEASES = 'https://github.com/pharmajava/freetvappweb/releases/download/descargas/';
+  var SITE = 'pharmajava.github.io/FREETVAPPWEB';
+  var RELEASES = 'https://github.com/PharmaJava/FREETVAPPWEB/releases/download/descargas/';
   var APK = RELEASES + 'FreeTV-Android.apk';
   var DOWNLOADS = {
-    windows: { label: 'Windows', file: 'FreeTV-Conector-Windows.exe' },
-    macArm: { label: 'Mac (Apple M1, M2, M3…)', file: 'FreeTV-Conector-Mac-AppleSilicon.zip' },
-    macIntel: { label: 'Mac (Intel)', file: 'FreeTV-Conector-Mac-Intel.zip' },
-    linux: { label: 'Linux', file: 'FreeTV-Conector-Linux' }
+    windows: { file: 'FreeTV-Windows.exe', howto: 'howto.windows' },
+    macArm: { file: 'FreeTV-Mac-AppleSilicon.zip', howto: 'howto.mac' },
+    macIntel: { file: 'FreeTV-Mac-Intel.zip', howto: 'howto.mac' },
+    linux: { file: 'FreeTV-Linux', howto: 'howto.linux' }
   };
-  var HOWTO = {
-    windows: '<ol><li>Abre el archivo descargado <b>FreeTV-Conector-Windows.exe</b>.</li>' +
-      '<li>Si Windows dice «Windows protegió su PC», pulsa <b>Más información</b> y luego <b>Ejecutar de todas formas</b> ' +
-      '(sale porque es un programa pequeño y nuevo, sin firma de pago).</li>' +
-      '<li>Si pregunta por el Firewall, pulsa <b>Permitir</b> (sirve para encontrar la tele en tu red).</li>' +
-      '<li>Se abre una ventana negra (déjala abierta mientras instalas) y los pasos siguen aquí, en el navegador.</li></ol>',
-    macArm: '<ol><li>Abre el <b>.zip</b> descargado (doble clic): aparece <b>FreeTV-Conector</b>.</li>' +
-      '<li>Haz <b>clic derecho → Abrir</b> sobre él y confirma <b>Abrir</b>. Si dice que no se puede verificar, ve a ' +
-      '<b>Ajustes del Sistema → Privacidad y seguridad</b>, baja y pulsa <b>Abrir igualmente</b>.</li>' +
-      '<li>Se abre una ventana de Terminal (déjala abierta mientras instalas) y los pasos siguen aquí, en el navegador. ' +
-      'Si el Mac pregunta por la <b>red local</b>, pulsa <b>Permitir</b>.</li></ol>',
-    linux: '<ol><li>En una terminal, en la carpeta de descargas: <code>chmod +x FreeTV-Conector-Linux && ./FreeTV-Conector-Linux</code></li>' +
-      '<li>Déjala abierta mientras instalas: los pasos siguen aquí, en el navegador.</li></ol>'
-  };
-  HOWTO.macIntel = HOWTO.macArm;
-
   var SERVICES = [
     ['netflix', 'Netflix'], ['prime', 'Prime Video'], ['disney', 'Disney+'], ['max', 'Max'], ['appletv', 'Apple TV+'],
     ['paramount', 'Paramount+'], ['crunchyroll', 'Crunchyroll'], ['hulu', 'Hulu'], ['peacock', 'Peacock'],
     ['globoplay', 'Globoplay'], ['hotstar', 'Hotstar']
   ];
 
-  var state = { brand: null, tv: null, place: null, connected: false, job: null, scanned: false };
+  var state = { brand: null, tv: null, place: null, connected: false, job: null, scanned: false, os: null };
 
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -49,10 +35,38 @@
   function save(key, value) { try { localStorage.setItem('freetv.' + key, JSON.stringify(value)); } catch (e) { /* private mode */ } }
   function load(key) { try { return JSON.parse(localStorage.getItem('freetv.' + key)); } catch (e) { return null; } }
 
+  /* ---------- language ---------- */
+  var TEXTS = window.FREETV_TEXTS;
+  var lang = load('lang') || (/^es\b/i.test(navigator.language || '') ? 'es' : 'en');
+  if (!TEXTS[lang]) lang = 'es';
+  /** A text in the current language, with {name} filled from values (values are inserted as they are: escape them first). */
+  function T(key, values) {
+    var s = TEXTS[lang][key];
+    if (s === undefined) s = TEXTS.es[key] === undefined ? key : TEXTS.es[key];
+    return s.replace(/\{(\w+)\}/g, function (m, k) { return values && values[k] !== undefined ? values[k] : m; });
+  }
+  // What depends on the language and on what happened so far is drawn again when the language changes.
+  var redraws = [];
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.title = T('page.title');
+    var meta = $('meta[name="description"]');
+    if (meta) meta.setAttribute('content', T('page.desc'));
+    $$('[data-t]').forEach(function (el) { el.innerHTML = T(el.getAttribute('data-t')); });
+    $$('[data-t-placeholder]').forEach(function (el) { el.setAttribute('placeholder', T(el.getAttribute('data-t-placeholder'))); });
+    $$('[data-t-aria]').forEach(function (el) { el.setAttribute('aria-label', T(el.getAttribute('data-t-aria'))); });
+    redraws.forEach(function (f) { f(); });
+  }
+  $('#lang').addEventListener('click', function () {
+    lang = lang === 'es' ? 'en' : 'es';
+    save('lang', lang);
+    applyLanguage();
+  });
+
   /* ---------- steps ---------- */
   var current = 'start', history = [];
   function go(step, back) {
-    // With the app or the Conector already there is nothing to do on step 3: pass it, forwards or backwards.
+    // With the app or the computer program already there, there is nothing to do on step 1: pass it, forwards or backwards.
     if (step === 'connector' && (DEVICE === 'app' || DEVICE === 'local' || (state.connected && state.via === 'pc'))) {
       step = current === 'brand' ? 'start' : 'brand';
     }
@@ -75,39 +89,39 @@
     return true;
   };
 
-  /* ---------- 1. brand ---------- */
-  var OTHER = {
-    samsung: ['Samsung: todavía no es automático',
-      '<p>FreeTV tiene una versión <b>experimental</b> para Samsung de 2017 en adelante, pero instalarla pide un <b>certificado de Samsung</b> ' +
-      'creado con tu cuenta, y eso todavía no se puede hacer con un botón. Además, en Samsung ninguna app puede sustituir el botón Home.</p>' +
-      '<p>Si te animas (o alguien de la familia sabe algo de ordenadores): <a href="https://github.com/PharmaJava/FreeTV/blob/main/docs/SAMSUNG.md" target="_blank" rel="noopener">guía de Samsung</a>.</p>'],
-    android: ['Android TV y Google TV: todavía no es automático',
-      '<p>Para estas teles FreeTV incluye la app de <b>Free My TV</b>, que hay que compilar con las herramientas de Android: todavía no se puede hacer con un botón.</p>' +
-      '<p>Lo más fácil: instala <b>Free My TV</b> desde su web oficial, <a href="https://freemytv.io" target="_blank" rel="noopener">freemytv.io</a>, ' +
-      'o mira la <a href="https://github.com/PharmaJava/FreeTV/blob/main/docs/ANDROID-TV.md" target="_blank" rel="noopener">guía de Android TV</a>.</p>']
-  };
-  $$('[data-brand]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      state.brand = b.getAttribute('data-brand');
-      if (state.brand === 'lg') { go('prepare'); return; }
-      $('#other-title').textContent = OTHER[state.brand][0];
-      $('#other-body').innerHTML = OTHER[state.brand][1];
-      go('other');
-    });
+  /* ---------- start: computer or Android phone ---------- */
+  if (DEVICE === 'app' || DEVICE === 'local') {
+    $('#via-box').hidden = true;
+    $('#start-box').hidden = false;
+  } else if (DEVICE === 'ios') {
+    $('#ov-note').setAttribute('data-t', 'via.note.ios');
+  }
+  // Step 1: the download for this device, or where to open this page instead.
+  function showGet() {
+    var v = state.via;
+    var pcHere = v === 'pc' && DEVICE === 'computer', androidHere = v === 'android' && DEVICE === 'android';
+    $('#get-android').hidden = !androidHere;
+    $('#get-computer').hidden = !pcHere;
+    $('#get-elsewhere').hidden = pcHere || androidHere;
+    $('#to-find').hidden = !pcHere;
+    $('#get-title').textContent = T(pcHere ? 'get.pc.title' : androidHere ? 'get.android.title'
+      : v === 'pc' ? 'get.elsewhere.pc.title' : 'get.elsewhere.android.title');
+    $('#elsewhere-text').textContent = T(v === 'pc' ? 'get.elsewhere.pc' : 'get.elsewhere.android');
+    $('#elsewhere-address').textContent = SITE;
+    $('#elsewhere-note').textContent = v === 'android' && DEVICE === 'ios' ? T('get.elsewhere.ios') : '';
+  }
+  redraws.push(showGet);
+  $$('[data-via]').forEach(function (b) {
+    b.addEventListener('click', function () { state.via = b.getAttribute('data-via'); save('via', state.via); showGet(); go('connector'); });
   });
+  state.via = load('via') || (DEVICE === 'android' ? 'android' : 'pc');
+  $('#dl-apk').href = APK;
 
-  /* ---------- 2. checklist remembers ---------- */
-  var ticks = load('prepare') || [];
-  $$('.checklist input').forEach(function (c, i) {
-    c.checked = !!ticks[i];
-    c.addEventListener('change', function () { ticks[i] = c.checked; save('prepare', ticks); });
-  });
-
-  /* ---------- 3. connector ---------- */
+  /* ---------- 1. the computer program ---------- */
   function detectOs() {
-    var ua = navigator.userAgent, p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
-    if (/Win/i.test(p) || /Windows/i.test(ua)) return 'windows';
-    if (/Mac/i.test(p) || /Mac OS X/i.test(ua)) {
+    var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+    if (/Win/i.test(p) || /Windows/i.test(UA)) return 'windows';
+    if (/Mac/i.test(p) || /Mac OS X/i.test(UA)) {
       try {   // Safari and Chrome on Apple Silicon say «Apple M…» or «Apple GPU» here; Intel Macs name Intel or AMD.
         var gl = document.createElement('canvas').getContext('webgl');
         var ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
@@ -116,23 +130,24 @@
       } catch (e) { /* no WebGL */ }
       return 'macArm';
     }
-    if (/Linux|X11/i.test(p + ua) && !/Android/i.test(ua)) return 'linux';
-    return 'windows';
+    if (/Linux|X11/i.test(p + UA) && !/Android/i.test(UA)) return 'linux';
+    return 'windows';   // the one we prepare for first
   }
-  function showDownloads(os) {
-    var d = DOWNLOADS[os];
+  function showDownloads() {
+    var os = state.os, d = DOWNLOADS[os];
     var main = $('#dl-main');
     main.href = RELEASES + d.file;
-    main.textContent = 'Descargar FreeTV para ' + d.label;
+    main.textContent = T('get.pc.button', { system: T('os.' + os) });
     $('#dl-links').innerHTML = Object.keys(DOWNLOADS).filter(function (k) { return k !== os; }).map(function (k) {
-      return '<a href="#" data-os="' + k + '">' + esc(DOWNLOADS[k].label) + '</a>';
+      return '<a href="#" data-os="' + k + '">' + esc(T('os.' + k)) + '</a>';
     }).join(' · ');
     $$('#dl-links a').forEach(function (a) {
-      a.addEventListener('click', function (e) { e.preventDefault(); showDownloads(a.getAttribute('data-os')); });
+      a.addEventListener('click', function (e) { e.preventDefault(); state.os = a.getAttribute('data-os'); showDownloads(); });
     });
-    $('#howto').innerHTML = HOWTO[os];
+    $('#howto').innerHTML = T(d.howto, { file: esc(d.file) });
   }
-  showDownloads(detectOs());
+  state.os = detectOs();
+  redraws.push(showDownloads);
 
   var calls = {}, callN = 0;
   window.__freetvReply = function (id, status, text) {
@@ -140,7 +155,7 @@
     delete calls[id];
     if (!c) return;
     var j;
-    try { j = JSON.parse(text); } catch (e) { j = { error: 'Respuesta no válida' }; }
+    try { j = JSON.parse(text); } catch (e) { j = { error: 'invalid answer' }; }
     if (status >= 200 && status < 300) c.resolve(j);
     else { var err = new Error(j.error || ('Error ' + status)); err.status = status; c.reject(err); }
   };
@@ -158,19 +173,26 @@
       return r.json().then(function (j) { if (!r.ok) { var e = new Error(j.error || ('HTTP ' + r.status)); e.status = r.status; throw e; } return j; });
     });
   }
+  function unreachable(e) { return !e.status; }   // fetch failed: nothing answered
 
+  var helloInfo = null;
   function setConnected(on, info) {
     state.connected = on;
-    var c = $('#conn');
-    c.hidden = false;
+    helloInfo = info || helloInfo;
+    drawConnected();
+  }
+  function drawConnected() {
+    var on = state.connected, c = $('#conn');
+    c.hidden = APP || DEVICE === 'local' || DEVICE !== 'computer' && !on;
     c.classList.toggle('on', on);
-    if (APP) { c.hidden = true; } else { $('#conn-text').textContent = on ? 'Programa abierto' : 'Programa cerrado'; }
+    $('#conn-text').textContent = T(on ? 'conn.on' : 'conn.off');
     $('#conn-wait').hidden = on;
     $('#conn-ok').hidden = !on;
     $('#to-find').disabled = !on;
     $('#download-box').hidden = on || API === '';
-    if (on && info && !info.ready) $('#conn-ok').lastChild.textContent = ' Conector abierto, pero sin los paquetes de FreeTV: descárgalo otra vez.';
+    $('#conn-ok-text').textContent = T(on && helloInfo && !helloInfo.ready ? 'get.pc.notready' : 'get.pc.ok');
   }
+  redraws.push(drawConnected);
   var polling = false;
   function poll() {
     if (polling) return;
@@ -178,58 +200,55 @@
     api('GET', '/api/hello').then(function (info) {
       var was = state.connected;
       setConnected(info.app === 'freetv-conector', info);
-      // Opened the Conector while on step 3: move on by itself.
+      // The program was opened while on step 1: move on by itself.
       if (!was && state.connected && current === 'connector' && state.via === 'pc') {
         setTimeout(function () { if (current === 'connector') go('brand'); }, 1200);
       }
     }).catch(function () { if (state.connected) setConnected(false); }).then(function () { polling = false; });
   }
-  // The first screen: how to do it (computer or Android phone). Inside the app or the computer program there is nothing to choose.
-  var SITE = 'pharmajava.github.io/freetvappweb';
-  if (DEVICE === 'app' || DEVICE === 'local') {
-    $('#via-box').hidden = true;
-    $('#start-box').hidden = false;
-  } else if (DEVICE === 'ios') {
-    $('#ov-note').innerHTML = 'En iPhone no se puede instalar: elige una de las dos y te decimos cómo. El ordenador o el móvil tiene que estar ' +
-      'en el <strong>mismo wifi</strong> que la tele.';
-  }
-  // Step 1: the download for this device, or where to open this page instead.
-  function showGet() {
-    var v = state.via;
-    var pcHere = v === 'pc' && DEVICE === 'computer', androidHere = v === 'android' && DEVICE === 'android';
-    $('#get-android').hidden = !androidHere;
-    $('#get-computer').hidden = !pcHere;
-    $('#get-elsewhere').hidden = pcHere || androidHere;
-    $('#to-find').hidden = !pcHere;
-    $('#get-title').textContent = pcHere ? 'Descarga FreeTV para tu ordenador' : androidHere ? 'Descarga la app FreeTV'
-      : v === 'pc' ? 'Hazlo desde el ordenador' : 'Hazlo desde el móvil Android';
-    $('#elsewhere-text').textContent = v === 'pc'
-      ? 'Abre esta misma página en el ordenador (Windows o Mac) que esté en el mismo wifi que la tele. Escribe esta dirección en su navegador:'
-      : 'Abre esta misma página en el móvil Android que vayas a usar (mándate el enlace por WhatsApp o escríbelo en su navegador):';
-    $('#elsewhere-address').textContent = SITE;
-    $('#elsewhere-note').textContent = v === 'android' && DEVICE === 'ios' ? 'En iPhone la app no se puede instalar: Apple solo deja instalar apps de su App Store.' : '';
-  }
-  $$('[data-via]').forEach(function (b) {
-    b.addEventListener('click', function () { state.via = b.getAttribute('data-via'); save('via', state.via); showGet(); go('connector'); });
-  });
-  state.via = load('via') || (DEVICE === 'android' ? 'android' : 'pc');
-  showGet();
-  $('#dl-apk').href = APK;
-  // Only the app and a computer (its Conector) can reach the TV: no point in asking on other phones.
+  // Only the app and a computer (its program) can reach the TV: no point in asking on other phones.
   if (DEVICE === 'app' || DEVICE === 'computer' || DEVICE === 'local') {
     setInterval(poll, APP ? 10000 : 2000);
     poll();
   }
 
+  /* ---------- 2. brand ---------- */
+  function showOther(brand) {
+    var key = brand === 'samsung' ? 'samsung' : 'android';
+    $('#other-title').textContent = T('other.' + key + '.title');
+    $('#other-body').innerHTML = T('other.' + key + '.body');
+    go('other');
+  }
+  redraws.push(function () {
+    if (current === 'other' && state.brand) {
+      var key = state.brand === 'samsung' ? 'samsung' : 'android';
+      $('#other-title').textContent = T('other.' + key + '.title');
+      $('#other-body').innerHTML = T('other.' + key + '.body');
+    }
+  });
+  $$('[data-brand]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.brand = b.getAttribute('data-brand');
+      if (state.brand === 'lg') go('prepare'); else showOther(state.brand);
+    });
+  });
+
+  /* ---------- 3. checklist remembers ---------- */
+  var ticks = load('prepare') || [];
+  $$('.checklist input').forEach(function (c, i) {
+    c.checked = !!ticks[i];
+    c.addEventListener('change', function () { ticks[i] = c.checked; save('prepare', ticks); });
+  });
+
   /* ---------- 4. find the TV ---------- */
-  function brandName(b) { return b === 'lg' ? 'LG' : b === 'samsung' ? 'Samsung' : b === 'android' ? 'Android / Google TV' : 'Tele'; }
+  function brandName(b) { return b === 'lg' ? 'LG' : b === 'samsung' ? 'Samsung' : b === 'android' ? 'Android / Google TV' : T('tv'); }
   function tvCard(tv) {
     var chips = '';
     if (tv.brand === 'lg') {
-      chips += tv.devMode ? '<span class="chip ok">Modo Desarrollador ✓</span>' : '<span class="chip bad">Modo Desarrollador apagado</span>';
-      chips += tv.keyServer ? '<span class="chip ok">Key Server ✓</span>' : '<span class="chip bad">Key Server apagado</span>';
+      chips += '<span class="chip ' + (tv.devMode ? 'ok">' + T('chip.dev.on') : 'bad">' + T('chip.dev.off')) + '</span>';
+      chips += '<span class="chip ' + (tv.keyServer ? 'ok">' + T('chip.key.on') : 'bad">' + T('chip.key.off')) + '</span>';
     } else {
-      chips = '<span class="chip">' + esc(brandName(tv.brand)) + ': todavía no automático</span>';
+      chips = '<span class="chip">' + T('chip.later', { brand: esc(brandName(tv.brand)) }) + '</span>';
     }
     var b = document.createElement('button');
     b.className = 'tv';
@@ -240,59 +259,65 @@
     return b;
   }
   function pick(tv) {
-    if (tv.brand && tv.brand !== 'lg') {
-      $('#other-title').textContent = OTHER[tv.brand][0];
-      $('#other-body').innerHTML = OTHER[tv.brand][1];
-      go('other');
-      return;
-    }
+    if (tv.brand && tv.brand !== 'lg') { state.brand = tv.brand; showOther(tv.brand); return; }
     state.tv = tv;
     save('ip', tv.ip);
     go('details');
   }
+  var scanView = { kind: 'searching' };
+  function drawScan() {
+    var st = $('#scan-status'), v = scanView;
+    if (v.kind === 'searching') {
+      st.className = 'status wait';
+      st.innerHTML = '<span class="spinner"></span> <span>' + T('find.searching') + '</span>';
+    } else if (v.kind === 'error') {
+      st.className = 'status bad';
+      st.innerHTML = '<span>' + T('find.cannot', { why: v.unreachable ? T('find.noprogram') : esc(v.message) }) + '</span>';
+    } else if (!v.tvs.length) {
+      st.className = 'status bad';
+      st.innerHTML = '<span>' + T('find.none') + '</span>';
+    } else {
+      var lgs = v.tvs.filter(function (t) { return t.brand === 'lg'; });
+      st.className = 'status ok';
+      st.innerHTML = '<span>' + (v.tvs.length === 1 ? T('find.one') : T('find.many', { n: v.tvs.length })) +
+        (lgs.length && !lgs.some(function (t) { return t.keyServer; }) ? T('find.keyoff') : '') + '</span>';
+    }
+    var list = $('#tv-list');
+    list.innerHTML = '';
+    (v.tvs || []).forEach(function (tv) { list.appendChild(tvCard(tv)); });
+  }
+  redraws.push(drawScan);
   function scan() {
     state.scanned = true;
-    var st = $('#scan-status');
-    st.className = 'status wait';
-    st.innerHTML = '<span class="spinner"></span> <span>Buscando teles en tu red… (unos segundos)</span>';
-    $('#tv-list').innerHTML = '';
+    scanView = { kind: 'searching' };
+    drawScan();
     api('POST', '/api/scan', {}).then(function (r) {
-      var list = $('#tv-list');
-      var lgs = r.tvs.filter(function (t) { return t.brand === 'lg'; });
-      r.tvs.forEach(function (tv) { list.appendChild(tvCard(tv)); });
-      if (!r.tvs.length) {
-        st.className = 'status bad';
-        st.innerHTML = '<span>No encuentro ninguna tele. Comprueba que está encendida y en el mismo wifi que este ordenador, o escribe su IP abajo.</span>';
-        $('#manual').open = true;
-      } else {
-        st.className = 'status ok';
-        st.innerHTML = '<span>' + (r.tvs.length === 1 ? 'He encontrado una tele. Púlsala.' : 'He encontrado ' + r.tvs.length + ' teles. Pulsa la tuya.') +
-          (lgs.length && !lgs.some(function (t) { return t.keyServer; }) ? ' Ojo: el Key Server parece apagado: actívalo en la app Developer Mode.' : '') + '</span>';
-      }
+      scanView = { kind: 'done', tvs: r.tvs };
+      drawScan();
+      if (!r.tvs.length) $('#manual').open = true;
       var last = load('ip');
       if (last && !$('#ip').value) $('#ip').value = last;
     }).catch(function (e) {
-      st.className = 'status bad';
-      st.innerHTML = '<span>No puedo buscar: ' + esc(e.message === 'Failed to fetch' ? 'el Conector no responde. ¿Está abierto?' : e.message) + '</span>';
+      scanView = { kind: 'error', unreachable: unreachable(e), message: e.message };
+      drawScan();
       $('#manual').open = true;
     });
   }
   $('#rescan').addEventListener('click', scan);
   $('#check-ip').addEventListener('click', function () {
     var ip = $('#ip').value.trim(), msg = $('#ip-msg');
-    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) { msg.textContent = 'Escribe la IP con puntos, como 192.168.1.140.'; return; }
-    msg.textContent = 'Comprobando…';
+    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) { msg.textContent = T('find.ip.bad'); return; }
+    msg.textContent = T('find.checking');
     api('POST', '/api/check', { ip: ip }).then(function (tv) {
       if (!tv.brand) {
-        msg.textContent = 'En esa IP no contesta ninguna tele. ¿Está encendida? Si es LG, revisa la IP en la app Developer Mode.';
         tv.brand = 'lg';   // still let them try: some TVs answer late
-        msg.innerHTML = esc(msg.textContent) + ' <button class="link" id="force">Probar igualmente</button>';
+        msg.innerHTML = esc(T('find.ip.none')) + ' <button class="link" id="force">' + T('find.try') + '</button>';
         $('#force').addEventListener('click', function () { pick(tv); });
         return;
       }
       msg.textContent = '';
       pick(tv);
-    }).catch(function (e) { msg.textContent = e.message; });
+    }).catch(function (e) { msg.textContent = unreachable(e) ? T('noprogram') : e.message; });
   });
 
   /* ---------- 5. details ---------- */
@@ -300,10 +325,11 @@
     var tv = state.tv;
     if (!tv) return;
     var warn = '';
-    if (tv.brand === 'lg' && tv.devMode === false) warn = ' <b>El Modo Desarrollador parece apagado</b>: ponlo en ON en la app Developer Mode.';
-    else if (tv.brand === 'lg' && tv.keyServer === false) warn = ' <b>El Key Server parece apagado</b>: actívalo en la app Developer Mode.';
-    $('#chosen-tv').innerHTML = 'Tele: <b>' + esc(tv.name || 'LG') + '</b> (' + esc(tv.ip) + ').' + warn;
+    if (tv.brand === 'lg' && tv.devMode === false) warn = T('details.devoff');
+    else if (tv.brand === 'lg' && tv.keyServer === false) warn = T('details.keyoff');
+    $('#chosen-tv').innerHTML = T('details.tv', { name: esc(tv.name || 'LG'), ip: esc(tv.ip) }) + warn;
   }
+  redraws.push(showChosen);
 
   var services = $('#services'), hidden = load('hideServices') || [];
   SERVICES.forEach(function (s) {
@@ -323,7 +349,7 @@
     cityTimer = setTimeout(function () { findCity(q); }, 350);
   });
   function findCity(q) {
-    fetch('https://geocoding-api.open-meteo.com/v1/search?count=5&language=es&format=json&name=' + encodeURIComponent(q))
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=5&format=json&language=' + lang + '&name=' + encodeURIComponent(q))
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var box = $('#city-results');
@@ -336,7 +362,7 @@
           box.appendChild(b);
           if (i === 0) choose(c, b, true);
         });
-        if (!j.results) box.innerHTML = '<p class="small">No la encuentro. Prueba con otra ciudad cercana.</p>';
+        if (!j.results) box.innerHTML = '<p class="small">' + T('city.none') + '</p>';
       }).catch(function () { /* offline: the default city stays */ });
   }
   function choose(c, b, quiet) {
@@ -352,7 +378,7 @@
     var msg = $('#details-msg');
     msg.hidden = true;
     var pass = $('#pass').value.trim();
-    if (!/^[A-Za-z0-9]{4,12}$/.test(pass)) { msg.textContent = 'Escribe la passphrase que sale en la tele (6 letras y números).'; msg.hidden = false; $('#pass').focus(); return; }
+    if (!/^[A-Za-z0-9]{4,12}$/.test(pass)) { msg.textContent = T('pass.bad'); msg.hidden = false; $('#pass').focus(); return; }
     if (!state.tv) { go('find'); return; }
     var hide = $$('#services input').filter(function (c) { return !c.checked; }).map(function (c) { return c.value; });
     save('hideServices', hide);
@@ -362,7 +388,7 @@
       showCrypto: $('#showCrypto').checked,
       store: $('#store').checked,
       tmdbKey: $('#tmdb').value.trim(),
-      language: 'auto'
+      language: 'auto'   // FreeTV on the TV follows the TV's own language
     };
     if (state.place) {
       settings.city = state.place.name;
@@ -376,42 +402,61 @@
       state.job = r.job;
       startProgress();
     }).catch(function (e) {
-      msg.textContent = e.message === 'Failed to fetch' ? 'El Conector no responde. ¿Sigue abierto?' : e.message;
+      msg.textContent = unreachable(e) ? T('noprogram') : e.status === 409 ? T('busy') : e.message;
       msg.hidden = false;
     }).then(function () { btn.disabled = false; });
   });
 
   /* ---------- 6. progress ---------- */
   var ICONS = { pending: '○', running: '<span class="spinner"></span>', done: '✓', failed: '✗', skipped: '–' };
+  var lastJob = null;
+  function noteText(note) {
+    var m = /^(\d+) apps$/.exec(note);
+    if (m) return T('note.apps', { n: m[1] });
+    return note === 'activada' ? T('note.on') : note === 'no disponible' ? T('note.na') : note;
+  }
+  function stepTitle(s) {
+    if (s.id === 'store' && /\(/.test(s.title)) return T('step.store.off');   // the installers say "(no activada)" when it is off
+    return TEXTS[lang]['step.' + s.id] ? T('step.' + s.id) : s.title;
+  }
+  function drawJob() {
+    var j = lastJob;
+    if (!j) { $('#progress-title').textContent = T('progress.title'); return; }
+    $('#steps').innerHTML = j.steps.map(function (s) {
+      return '<li class="' + s.state + '"><span class="ico">' + ICONS[s.state] + '</span><span>' + esc(stepTitle(s)) + '</span>' +
+        (s.note ? '<span class="note">' + esc(noteText(s.note)) + '</span>' : '') + '</li>';
+    }).join('');
+    $('#prompt').hidden = !j.prompt;
+    $('#log').textContent = j.log.map(function (l) { return l.text; }).join('\n');
+    $('#done').hidden = j.state !== 'done';
+    $('#failed').hidden = j.state !== 'failed';
+    $('#progress-title').textContent = T(j.state === 'done' ? 'progress.done.title' : j.state === 'failed' ? 'progress.failed.title' : 'progress.title');
+    if (j.state === 'failed') {
+      var code = j.error && j.error.code;
+      // The installers explain in Spanish; the page has its own text for each known problem, in both languages.
+      $('#fail-msg').textContent = lang === 'es' && j.error ? j.error.message : TEXTS[lang]['err.' + code] ? T('err.' + code)
+        : T('err.other') + (j.error ? ' (' + j.error.message + ')' : '');
+    }
+  }
+  redraws.push(drawJob);
   function startProgress() {
+    lastJob = null;
     $('#done').hidden = true;
     $('#failed').hidden = true;
-    $('#progress-title').textContent = 'Instalando…';
     $('#steps').innerHTML = '';
     state.installing = true;
+    drawJob();
     go('progress');
     tick();
   }
   function tick() {
     api('GET', '/api/job/' + state.job).then(function (j) {
-      $('#steps').innerHTML = j.steps.map(function (s) {
-        return '<li class="' + s.state + '"><span class="ico">' + ICONS[s.state] + '</span><span>' + esc(s.title) + '</span>' +
-          (s.note ? '<span class="note">' + esc(s.note) + '</span>' : '') + '</li>';
-      }).join('');
-      $('#prompt').hidden = !j.prompt;
-      $('#log').textContent = j.log.map(function (l) { return l.text; }).join('\n');
+      lastJob = j;
+      drawJob();
       state.installing = j.state === 'running';
       if (state.installing) { setTimeout(tick, 1000); return; }
-      if (j.state === 'done') {
-        $('#progress-title').textContent = '¡Hecho!';
-        $('#done').hidden = false;
-        $('#pass').value = '';
-      } else {
-        $('#progress-title').textContent = 'No se pudo terminar';
-        $('#fail-msg').textContent = j.error ? j.error.message : 'Algo falló.';
-        $('#failed').hidden = false;
-        state.failCode = j.error && j.error.code;
-      }
+      if (j.state === 'done') $('#pass').value = '';
+      else state.failCode = j.error && j.error.code;
     }).catch(function () { setTimeout(tick, 2000); });
   }
   $('#retry').addEventListener('click', function () {
@@ -419,4 +464,5 @@
     go('details');
   });
 
+  applyLanguage();
 })();

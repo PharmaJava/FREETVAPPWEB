@@ -61,7 +61,7 @@ dependencies {
 // Inside the app: the same web page GitHub Pages serves (the repository's root) and FreeTV's packages (connector/bundle).
 def repo = rootProject.projectDir.parentFile
 tasks.register('freetvAssets', Sync) {
-    from(repo) { include 'index.html', 'app.js', 'style.css', 'icon.svg'; into 'site' }
+    from(repo) { include 'index.html', 'i18n.js', 'app.js', 'style.css', 'icon.svg'; into 'site' }
     from(new File(repo, 'connector/bundle')) { include 'bundle.json', 'launcher.ipk', 'nativehome.ipk'; into 'bundle' }
     into layout.buildDirectory.dir('generated/freetv-assets')
     doFirst {

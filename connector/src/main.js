@@ -24,7 +24,7 @@ const ORIGINS = new Set([SITE_ORIGIN, HOME, 'http://localhost:' + PORT].concat((
 let sea = null;
 try { sea = require('node:sea'); if (!sea.isSea()) sea = null; } catch (e) { sea = null; }
 // The web page's files (at the repository's root, where GitHub Pages serves them).
-const SITE_FILES = ['index.html', 'app.js', 'style.css', 'icon.svg'];
+const SITE_FILES = ['index.html', 'i18n.js', 'app.js', 'style.css', 'icon.svg'];
 function asset(name) {
   if (name.startsWith('site/') && !SITE_FILES.includes(name.slice(5))) return null;
   if (sea) { try { return Buffer.from(sea.getAsset(name)); } catch (e) { return null; } }
@@ -103,7 +103,12 @@ async function api(req, res, origin) {
     const job = new lg.Job(b.ip, settings);
     jobs.set(job.id, job);
     running = job;
-    lg.run(job, bundle, b.passphrase, settings);
+    console.log('  ▸ Instalando en / Installing on ' + job.ip + '…');
+    lg.run(job, bundle, b.passphrase, settings).then(() => {
+      console.log(job.state === 'done'
+        ? '  ✓ ¡Hecho! Ya puedes cerrar esta ventana. / Done! You can close this window now.'
+        : '  ✗ No se pudo terminar / It could not finish: ' + (job.error ? job.error.message : '') + '\n    (Puedes volver a intentarlo desde el navegador. / You can try again from the browser.)');
+    });
     return send(res, 200, { job: job.id }, origin);
   }
   const m = route.match(/^GET \/api\/job\/([a-f0-9]{12})$/);
@@ -147,22 +152,42 @@ function openBrowser(url) {
 
 server.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {
-    console.log('FreeTV Conector ya está abierto. Abre ' + HOME + ' en el navegador.');
+    console.log('  FreeTV ya está abierto en otra ventana: sigue en el navegador (' + HOME + ').');
+    console.log('  FreeTV is already open in another window: continue in the browser (' + HOME + ').');
     openBrowser(HOME);
-    setTimeout(() => process.exit(0), 1500);
+    setTimeout(() => process.exit(0), 4000);
   } else {
-    console.error('No puedo arrancar:', e.message);
-    process.exit(1);
+    fatal(e);
   }
 });
 
+// Opened with a double click (Windows, Mac), the window would close at once on an error and take the message with it: keep it
+// until the person presses Enter.
+function fatal(e) {
+  console.error('');
+  console.error('  ✗ FreeTV no puede arrancar / FreeTV cannot start: ' + (e && e.message ? e.message : e));
+  if (process.stdin.isTTY) {
+    console.error('  Pulsa Enter para cerrar. / Press Enter to close.');
+    process.stdin.resume();
+    process.stdin.once('data', () => process.exit(1));
+  } else {
+    process.exit(1);
+  }
+}
+process.on('uncaughtException', fatal);
+
+process.title = 'FreeTV';
 server.listen(PORT, '127.0.0.1', () => {
   console.log('');
-  console.log('  FreeTV Conector ' + VERSION + (bundle ? ' (FreeTV ' + bundle.info.freetv.slice(0, 7) + ')' : ' (sin paquetes de FreeTV)'));
+  console.log('  FreeTV ' + VERSION + (bundle ? ' (FreeTV ' + bundle.info.freetv.slice(0, 7) + ')' : ' (sin paquetes de FreeTV / without FreeTV packages)'));
   console.log('  ─────────────────────────────────────────────');
-  console.log('  Funcionando. Vuelve al navegador y sigue los pasos.');
+  console.log('  Funcionando. Sigue los pasos en el navegador.');
   console.log('  Si no se abre solo, entra en: ' + HOME);
-  console.log('  Deja esta ventana abierta hasta que termine. Luego puedes cerrarla.');
+  console.log('  Deja esta ventana abierta hasta que termine.');
+  console.log('');
+  console.log('  Running. Follow the steps in the browser.');
+  console.log('  If it does not open, go to: ' + HOME);
+  console.log('  Leave this window open until it finishes.');
   console.log('');
   // The page on GitHub Pages is usually open already, waiting for this program: it says hello within a couple of seconds.
   // If it does not (it was closed, or the browser does not let it reach this computer, like Safari), open the same page from here.

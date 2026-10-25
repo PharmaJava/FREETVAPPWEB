@@ -1,7 +1,7 @@
 {
   "name": "freetv-conector",
   "version": "1.0.0",
-  "description": "FreeTV Conector: lo que la web de FreeTV necesita en tu ordenador para hablar con tu tele (buscarla e instalar FreeTV)",
+  "description": "FreeTV for Windows and Mac: the program the FreeTV web page needs on the computer to talk to the TV (find it and install FreeTV)",
   "private": true,
   "license": "MIT",
   "main": "src/main.js",
@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "esbuild": "0.25.11",
-    "postject": "1.0.0-alpha.6"
+    "postject": "1.0.0-alpha.6",
+    "rcedit": "4.0.1"
   }
 }
