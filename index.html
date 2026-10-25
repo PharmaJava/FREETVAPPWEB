@@ -23,10 +23,10 @@
       tienes. No se rompe nada y <strong>todo se puede deshacer</strong>.</p>
     <ol class="overview">
       <li>Preparas la tele (5 minutos, con el mando).</li>
-      <li>Descargas un pequeño programa, el <em>Conector</em>, y lo abres.</li>
+      <li id="ov-get">Descargas la app <strong>FreeTV</strong> en tu móvil Android y la abres.</li>
       <li>Eliges tu tele, escribes un código que sale en la tele y pulsas <strong>Instalar</strong>.</li>
     </ol>
-    <p class="note">Necesitas un ordenador (Windows, Mac o Linux) conectado al <strong>mismo wifi</strong> que la tele.</p>
+    <p class="note" id="ov-note">Solo necesitas este móvil, conectado al <strong>mismo wifi</strong> que la tele.</p>
     <button class="big primary" data-go="brand">Empezar</button>
   </section>
 
@@ -78,30 +78,59 @@
     </div>
   </section>
 
-  <!-- 3. Conector -->
+  <!-- 3. La app (Android), el Conector (ordenador) o la explicación (iPhone) -->
   <section class="step" data-step="connector" hidden>
     <p class="crumb">Paso 3 de 5</p>
-    <h1>Descarga y abre el Conector</h1>
-    <p class="lead">Una página web no puede hablar con la tele por sí sola. El <strong>Conector</strong> es un programa pequeño que lo hace
-      por ella mientras instalas. No se instala: se abre, hace su trabajo y lo cierras.</p>
+    <h1 id="get-title">Descarga la app FreeTV</h1>
 
-    <div id="conn-wait" class="status wait"><span class="spinner"></span> <span>Esperando a que abras el Conector…</span></div>
-    <div id="conn-ok" class="status ok" hidden>✓ <span>¡Conector abierto! Ya podemos buscar tu tele.</span></div>
-
-    <div id="download-box">
-      <a id="dl-main" class="big primary download" href="#">Descargar el Conector</a>
-      <p class="small" id="dl-other">Otros sistemas: <span id="dl-links"></span></p>
-      <div id="howto" class="howto"></div>
+    <div id="get-android" hidden>
+      <p class="lead">Una página web no puede hablar con la tele. La app <strong>FreeTV</strong> sí: tiene estos mismos pasos y además
+        llega a la tele por el wifi. Es gratis y ocupa unos 5 MB.</p>
+      <a id="dl-apk" class="big primary download" href="#">Descargar la app FreeTV</a>
+      <div class="howto">
+        <ol>
+          <li>Pulsa el botón. Si el móvil avisa de que el archivo puede ser dañino, pulsa <b>Descargar de todas formas</b>.</li>
+          <li>Abre <b>FreeTV-Android.apk</b> desde el aviso de descarga (o en <b>Archivos → Descargas</b>).</li>
+          <li>Si dice que no puedes instalar apps de esta fuente: pulsa <b>Ajustes</b>, activa <b>Permitir de esta fuente</b> y vuelve atrás.</li>
+          <li>Pulsa <b>Instalar</b>. Si sale <em>Google Play Protect</em>: <b>Más detalles → Instalar de todas formas</b>
+            (sale con cualquier app que no viene de Google Play).</li>
+          <li>Pulsa <b>Abrir</b> y sigue allí: la app te lleva directa a buscar tu tele.</li>
+        </ol>
+      </div>
     </div>
-    <details class="small">
-      <summary>Ya lo abrí y aquí no pasa nada</summary>
-      <p>El propio Conector abre el asistente en una pestaña nueva del navegador (dirección <code>127.0.0.1:47321</code>): sigue allí.
-        Si no se abre solo, <a href="http://127.0.0.1:47321/" target="_blank" rel="noopener">pulsa aquí</a>. Si el navegador pregunta si esta
-        página puede acceder a dispositivos o apps de tu red local, pulsa <strong>Permitir</strong>.</p>
-    </details>
+
+    <div id="get-ios" hidden>
+      <p class="lead">En iPhone y iPad todavía no se puede. Apple solo deja instalar apps desde su App Store, y una página web no puede
+        hablar con la tele.</p>
+      <p>Lo que sí funciona:</p>
+      <ul>
+        <li>Con un <strong>móvil Android</strong> de casa: abre esta misma página en él.</li>
+        <li>Con un <strong>ordenador</strong> (Windows, Mac o Linux): abre esta página en él y usa el Conector.</li>
+      </ul>
+      <p class="small">La tele ya está preparada: cuando lo hagas desde el otro aparato, salta directamente al paso 3.</p>
+    </div>
+
+    <div id="get-computer" hidden>
+      <p class="lead">En el ordenador, el que habla con la tele es el <strong>Conector</strong>, un programa pequeño. No se instala: se abre,
+        hace su trabajo y lo cierras. (¿Tienes un móvil Android? Abre esta página en él y es todavía más fácil.)</p>
+      <div id="conn-wait" class="status wait"><span class="spinner"></span> <span>Esperando a que abras el Conector…</span></div>
+      <div id="conn-ok" class="status ok" hidden>✓ <span>¡Conector abierto! Ya podemos buscar tu tele.</span></div>
+      <div id="download-box">
+        <a id="dl-main" class="big primary download" href="#">Descargar el Conector</a>
+        <p class="small" id="dl-other">Otros sistemas: <span id="dl-links"></span></p>
+        <div id="howto" class="howto"></div>
+      </div>
+      <details class="small">
+        <summary>Ya lo abrí y aquí no pasa nada</summary>
+        <p>El propio Conector abre el asistente en una pestaña nueva del navegador (dirección <code>127.0.0.1:47321</code>): sigue allí.
+          Si no se abre solo, <a href="http://127.0.0.1:47321/" target="_blank" rel="noopener">pulsa aquí</a>. Si el navegador pregunta si esta
+          página puede acceder a dispositivos o apps de tu red local, pulsa <strong>Permitir</strong>.</p>
+      </details>
+    </div>
+
     <div class="row">
       <button class="link" data-go="prepare">← Volver</button>
-      <button class="big primary" id="to-find" data-go="find" disabled>Seguir</button>
+      <button class="big primary" id="to-find" data-go="find" disabled hidden>Seguir</button>
     </div>
   </section>
 
@@ -205,7 +234,7 @@
 <footer class="foot">
   <p>FreeTV es libre (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">Código de FreeTV</a> ·
     <a href="https://github.com/pharmajava/freetvappweb" target="_blank" rel="noopener">Código de esta web</a> ·
-    No está afiliado a LG. Tus datos no salen de tu casa: la passphrase va del navegador al Conector y del Conector a la tele.</p>
+    No está afiliado a LG. Tus datos no salen de tu casa: la passphrase solo va de tu móvil (o tu ordenador) a la tele.</p>
 </footer>
 <script src="app.js"></script>
 </body>

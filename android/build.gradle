@@ -1,0 +1,5 @@
+// Versions in one place.
+ext {
+    jschVersion = '0.2.20'
+    compressVersion = '1.27.1'
+}

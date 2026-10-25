@@ -1,0 +1,71 @@
+plugins {
+    id 'com.android.application' version '8.7.3'
+}
+
+// The signing key: the one in this folder unless GitHub has its own in secrets (see README, "La app de Android").
+def keystoreFile = System.getenv('FREETV_KEYSTORE') ? file(System.getenv('FREETV_KEYSTORE')) : file('freetv-release.keystore')
+
+android {
+    namespace 'io.freetv.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'io.freetv.app'
+        minSdk 26
+        targetSdk 35
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
+        versionName '1.0.' + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+    }
+
+    signingConfigs {
+        release {
+            storeFile keystoreFile
+            storePassword System.getenv('FREETV_KEYSTORE_PASSWORD') ?: 'freetv-android'
+            keyAlias System.getenv('FREETV_KEY_ALIAS') ?: 'freetv'
+            keyPassword System.getenv('FREETV_KEY_PASSWORD') ?: 'freetv-android'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false        // SSH finds its algorithms by name: shrinking would break it
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += ['META-INF/LICENSE*', 'META-INF/NOTICE*', 'META-INF/DEPENDENCIES', 'META-INF/versions/**']
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    sourceSets {
+        main.assets.srcDirs += layout.buildDirectory.dir('generated/freetv-assets')
+    }
+}
+
+dependencies {
+    implementation project(':core')
+}
+
+// Inside the app: the same web page GitHub Pages serves (the repository's root) and FreeTV's packages (connector/bundle).
+def repo = rootProject.projectDir.parentFile
+tasks.register('freetvAssets', Sync) {
+    from(repo) { include 'index.html', 'app.js', 'style.css', 'icon.svg'; into 'site' }
+    from(new File(repo, 'connector/bundle')) { include 'bundle.json', 'launcher.ipk', 'nativehome.ipk'; into 'bundle' }
+    into layout.buildDirectory.dir('generated/freetv-assets')
+    doFirst {
+        if (!new File(repo, 'connector/bundle/launcher.ipk').exists()) throw new GradleException('Falta connector/bundle: ejecuta antes connector/scripts/build-bundle.sh')
+    }
+}
+preBuild.dependsOn 'freetvAssets'

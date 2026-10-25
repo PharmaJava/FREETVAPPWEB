@@ -1,7 +1,8 @@
-# Builds everything and publishes it:
+# Builds everything and publishes the downloads (GitHub Pages serves the web page itself straight from main's root):
 #   - FreeTV's packages for LG, from PharmaJava/FreeTV (FREETV_REF), the same way FreeTV's install.sh builds them,
-#   - FreeTV Conector for Windows, macOS (Apple Silicon and Intel) and Linux, with those packages inside,
-#   - the web page (site/) on GitHub Pages, and the Conector downloads on the release named after connector/package.json's version.
+#   - the Android app (android/), with those packages and the web page inside,
+#   - FreeTV Conector for Windows, macOS (Apple Silicon and Intel) and Linux, with the same inside,
+#   - all of them on the release "descargas", the one the web page links to.
 # Runs on every push to main, and by hand (Actions → Build and publish → Run workflow) to pick up a new FreeTV.
 name: Build and publish
 
@@ -15,6 +16,7 @@ env:
   FREETV_REPO: PharmaJava/FreeTV
   FREETV_REF: main
   NODE_VERSION: '22.20.0'
+  RELEASE_TAG: descargas
 
 permissions:
   contents: read
@@ -44,6 +46,41 @@ jobs:
         with:
           name: bundle
           path: connector/bundle/
+
+  android:
+    needs: bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: connector/bundle/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: The pretend TV's libraries (for the tests)
+        working-directory: connector
+        run: npm ci --no-audit --no-fund
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Test the installer and build the app
+        working-directory: android
+        run: gradle --no-daemon :core:test :app:assembleRelease
+      - name: Name the download
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk dist/FreeTV-Android.apk
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: download-android
+          path: dist/
 
   connector:
     needs: bundle
@@ -94,41 +131,29 @@ jobs:
           kill %1
       - uses: actions/upload-artifact@v4
         with:
-          name: conector-${{ runner.os }}
+          name: download-${{ runner.os }}
           path: connector/dist/
 
   publish:
-    needs: connector
+    needs: [android, connector]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.pages.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: conector-*
+          pattern: download-*
           path: downloads
           merge-multiple: true
-      - name: Release with the downloads
+      - name: Put the downloads on the "descargas" release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version="v$(node -p 'require("./connector/package.json").version')"
           ls -l downloads
-          if ! gh release view "$version" >/dev/null 2>&1; then
-            gh release create "$version" --title "FreeTV Conector $version" \
-              --notes "Descarga el Conector desde la web: https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/"
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --title "Descargas de FreeTV" --latest \
+              --notes "La app de Android y el Conector para ordenador. Empieza en la web: https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/"
           fi
-          gh release upload "$version" downloads/* --clobber
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - id: pages
-        uses: actions/deploy-pages@v4
+          gh release upload "$RELEASE_TAG" downloads/* --clobber

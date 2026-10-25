@@ -5,7 +5,14 @@
   var LOCAL = 'http://127.0.0.1:47321';
   // Served by the Conector itself (Safari, or when the page on GitHub cannot reach this computer): same address, no CORS.
   var API = location.origin === LOCAL || location.origin === 'http://localhost:47321' ? '' : LOCAL;
-  var RELEASES = 'https://github.com/pharmajava/freetvappweb/releases/latest/download/';
+  // Inside the Android app the installer is the app itself: the page asks it through window.FreeTVAndroid, not over http.
+  var APP = !!window.FreeTVAndroid;
+  var UA = navigator.userAgent;
+  var DEVICE = APP ? 'app'
+    : /iPhone|iPad|iPod/i.test(UA) || (/Macintosh/i.test(UA) && navigator.maxTouchPoints > 1) ? 'ios'
+    : /Android/i.test(UA) ? 'android' : 'computer';
+  var RELEASES = 'https://github.com/pharmajava/freetvappweb/releases/download/descargas/';
+  var APK = RELEASES + 'FreeTV-Android.apk';
   var DOWNLOADS = {
     windows: { label: 'Windows', file: 'FreeTV-Conector-Windows.exe' },
     macArm: { label: 'Mac (Apple M1, M2, M3…)', file: 'FreeTV-Conector-Mac-AppleSilicon.zip' },
@@ -42,10 +49,11 @@
   function load(key) { try { return JSON.parse(localStorage.getItem('freetv.' + key)); } catch (e) { return null; } }
 
   /* ---------- steps ---------- */
-  var current = 'start';
-  function go(step) {
-    // With the Conector already open there is nothing to do on its step: pass it, forwards or backwards.
+  var current = 'start', history = [];
+  function go(step, back) {
+    // With the app or the Conector already there is nothing to do on step 3: pass it, forwards or backwards.
     if (step === 'connector' && state.connected) step = current === 'find' ? 'prepare' : 'find';
+    if (!back && step !== current) history.push(current);
     current = step;
     $$('.step').forEach(function (s) { s.hidden = s.getAttribute('data-step') !== step; });
     window.scrollTo(0, 0);
@@ -55,6 +63,14 @@
     if (step === 'details') showChosen();
   }
   $$('[data-go]').forEach(function (b) { b.addEventListener('click', function () { go(b.getAttribute('data-go')); }); });
+  // Android's back button, inside the app: one step back (true), or leave the app when on the first one (false).
+  window.__freetvBack = function () {
+    if (current === 'progress' && state.installing) return true;   // installing: stay on this screen
+    var prev = history.pop();
+    if (!prev) return false;
+    go(prev === 'connector' && state.connected ? 'prepare' : prev, true);
+    return true;
+  };
 
   /* ---------- 1. brand ---------- */
   var OTHER = {
@@ -115,7 +131,24 @@
   }
   showDownloads(detectOs());
 
+  var calls = {}, callN = 0;
+  window.__freetvReply = function (id, status, text) {
+    var c = calls[id];
+    delete calls[id];
+    if (!c) return;
+    var j;
+    try { j = JSON.parse(text); } catch (e) { j = { error: 'Respuesta no válida' }; }
+    if (status >= 200 && status < 300) c.resolve(j);
+    else { var err = new Error(j.error || ('Error ' + status)); err.status = status; c.reject(err); }
+  };
   function api(method, path, body) {
+    if (APP) {
+      return new Promise(function (resolve, reject) {
+        var id = 'r' + (++callN);
+        calls[id] = { resolve: resolve, reject: reject };
+        window.FreeTVAndroid.request(id, method, path, body ? JSON.stringify(body) : '');
+      });
+    }
     var opts = { method: method, headers: {} };
     if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
     return fetch(API + path, opts).then(function (r) {
@@ -128,7 +161,7 @@
     var c = $('#conn');
     c.hidden = false;
     c.classList.toggle('on', on);
-    $('#conn-text').textContent = on ? 'Conector abierto' : 'Conector cerrado';
+    if (APP) { c.hidden = true; } else { $('#conn-text').textContent = on ? 'Conector abierto' : 'Conector cerrado'; }
     $('#conn-wait').hidden = on;
     $('#conn-ok').hidden = !on;
     $('#to-find').disabled = !on;
@@ -146,8 +179,28 @@
       if (!was && state.connected && current === 'connector') setTimeout(function () { if (current === 'connector') go('find'); }, 1200);
     }).catch(function () { if (state.connected) setConnected(false); }).then(function () { polling = false; });
   }
-  setInterval(poll, 2000);
-  poll();
+  // Step 3 for each device: the app (Android phone), the Conector (computer) or why not yet (iPhone).
+  var GET_TITLE = { android: 'Descarga la app FreeTV', ios: 'En iPhone, todavía no', computer: 'Descarga y abre el Conector', app: 'Descarga la app FreeTV' };
+  $('#get-title').textContent = GET_TITLE[DEVICE];
+  $('#get-android').hidden = DEVICE !== 'android';
+  $('#get-ios').hidden = DEVICE !== 'ios';
+  $('#get-computer').hidden = DEVICE !== 'computer';
+  $('#to-find').hidden = DEVICE !== 'computer';
+  $('#dl-apk').href = APK;
+  if (DEVICE === 'computer') {
+    $('#ov-get').innerHTML = 'Descargas un pequeño programa, el <em>Conector</em>, y lo abres. (Con un móvil Android es aún más fácil: abre esta página en él.)';
+    $('#ov-note').innerHTML = 'Necesitas este ordenador conectado al <strong>mismo wifi</strong> que la tele.';
+  } else if (DEVICE === 'ios') {
+    $('#ov-note').innerHTML = '<strong>Ojo:</strong> en iPhone todavía no se puede instalar. Hace falta un móvil Android o un ordenador en el mismo wifi que la tele.';
+  } else if (DEVICE === 'app') {
+    $('#ov-get').hidden = true;
+    $('#ov-note').innerHTML = 'Tu móvil tiene que estar conectado al <strong>mismo wifi</strong> que la tele.';
+  }
+  // Only the app and a computer (its Conector) can reach the TV: no point in asking on other phones.
+  if (DEVICE === 'app' || DEVICE === 'computer') {
+    setInterval(poll, APP ? 10000 : 2000);
+    poll();
+  }
 
   /* ---------- 4. find the TV ---------- */
   function brandName(b) { return b === 'lg' ? 'LG' : b === 'samsung' ? 'Samsung' : b === 'android' ? 'Android / Google TV' : 'Tele'; }
@@ -316,6 +369,7 @@
     $('#failed').hidden = true;
     $('#progress-title').textContent = 'Instalando…';
     $('#steps').innerHTML = '';
+    state.installing = true;
     go('progress');
     tick();
   }
@@ -327,7 +381,8 @@
       }).join('');
       $('#prompt').hidden = !j.prompt;
       $('#log').textContent = j.log.map(function (l) { return l.text; }).join('\n');
-      if (j.state === 'running') { setTimeout(tick, 1000); return; }
+      state.installing = j.state === 'running';
+      if (state.installing) { setTimeout(tick, 1000); return; }
       if (j.state === 'done') {
         $('#progress-title').textContent = '¡Hecho!';
         $('#done').hidden = false;

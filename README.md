@@ -1,35 +1,36 @@
 # FreeTV para tu tele (instalador web)
 
-**Una página web para que cualquiera, sin saber nada de ordenadores, ponga [FreeTV](https://github.com/PharmaJava/FreeTV) en su tele LG.**
+**Una página web para que cualquiera, sin saber nada de ordenadores, ponga [FreeTV](https://github.com/PharmaJava/FreeTV) en su tele LG
+solo con su móvil Android.**
 
-Elige la tele, escribe el código que sale en la pantalla de la tele y pulsa **Instalar**. Sin terminal, sin Python, sin Node, sin WSL.
+Le das la dirección de la web. Desde el móvil descargan la app FreeTV, eligen su tele, escriben el código que sale en la tele y pulsan
+**Instalar**. Sin ordenador. (También funciona desde un ordenador, con el Conector.)
 
 Web: **https://pharmajava.github.io/freetvappweb/**
 
 ## Cómo funciona
 
-Una página web, por seguridad, **no puede** buscar aparatos en tu red, abrir una conexión SSH ni hablar con la IP de la tele.
-Por eso hay dos piezas:
+Una página web, por seguridad, **no puede** hablar con la tele (ni buscarla, ni abrir la conexión SSH que LG exige para instalar). Por
+eso la web es la puerta de entrada y quien habla con la tele es una app en el mismo aparato:
 
 ```
- navegador ── web (GitHub Pages) ──▶ FreeTV Conector (en tu ordenador, 127.0.0.1:47321) ──▶ tele LG
-              los pasos, en español        busca la tele, prepara FreeTV          Key Server :9991
-                                           con tus ajustes y lo instala           SSH :9922 · mando :3000/3001
+ móvil Android:  web (GitHub Pages) ─▶ «Descargar la app» ─▶ app FreeTV (la misma web por dentro + el instalador) ─▶ tele LG
+ ordenador:      web (GitHub Pages) ─▶ FreeTV Conector (127.0.0.1:47321) ─────────────────────────────────────────▶ tele LG
+ iPhone:         la web explica que hace falta un Android o un ordenador (Apple solo deja instalar desde la App Store)
 ```
 
-1. **La web** (`site/`): HTML, CSS y JavaScript sin librerías. Guía paso a paso: qué tele tienes, cómo poner la tele en Modo
-   Desarrollador, descargar el Conector, elegir la tele de una lista (o escribir la IP), la *passphrase*, tu ciudad y tus servicios.
-2. **El Conector** (`connector/`): un único archivo que se descarga y se abre con doble clic (Windows `.exe`, Mac, Linux). Lleva dentro
-   los paquetes de FreeTV ya compilados. Hace lo mismo que `install.sh` de FreeTV:
-   - **busca teles** en tu red (SSDP y los puertos que abren las teles LG, Samsung y Android TV) y dice si el Modo Desarrollador y el
-     Key Server están activos,
-   - pide la llave al **Key Server** de la tele y la abre con la *passphrase* (solo en memoria),
-   - lee las apps de la tele (la tele muestra un aviso: **Aceptar** con el mando),
-   - mete tus ajustes y tus apps en el paquete de FreeTV, instala el ayudante del botón Home y FreeTV, y los configura,
-   - solo si lo marcas: la tienda de apps desde la propia tele (igual que la pregunta final de `install.sh`).
+1. **La web** (`index.html`, `app.js`, `style.css` en la raíz, que es lo que sirve GitHub Pages): los pasos en español. Detecta el
+   aparato: en Android ofrece la app, en ordenador el Conector, en iPhone lo explica.
+2. **La app de Android** (`android/`): muestra **la misma web** (va dentro de la app) y por debajo el instalador (`android/core`, Java),
+   al que la web llama por un puente JavaScript (`window.FreeTVAndroid`) con la misma API que el Conector.
+3. **El Conector** (`connector/`): lo mismo para ordenador (Windows, Mac, Linux), en Node.
 
-Si el navegador no deja a la web de GitHub hablar con el Conector (Safari, o si no se da permiso), el Conector abre **la misma web servida
-por él mismo** en `http://127.0.0.1:47321`, y todo sigue igual.
+Los dos instaladores hacen lo mismo que `install.sh` de FreeTV:
+- **buscan teles** en el wifi (SSDP y los puertos de LG, Samsung y Android TV) y dicen si el Modo Desarrollador y el Key Server están activos,
+- piden la llave al **Key Server** de la tele y la abren con la *passphrase* (solo en memoria),
+- leen las apps de la tele (la tele muestra un aviso: **Aceptar** con el mando),
+- meten tus ajustes y tus apps en el paquete de FreeTV, instalan el ayudante del botón Home y FreeTV, y los configuran,
+- solo si se marca: la tienda de apps desde la propia tele (igual que la pregunta final de `install.sh`).
 
 ### Qué teles
 
@@ -49,17 +50,24 @@ por él mismo** en `http://127.0.0.1:47321`, y todo sigue igual.
 
 ## Para quien mantiene esto
 
-### Activar la web (una vez)
+### La web y las descargas
 
-1. En GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Haz *merge* a `main`. El flujo **Build and publish** (`.github/workflows/build.yml`):
-   - compila los paquetes de FreeTV desde `PharmaJava/FreeTV` (rama `main`, se cambia en `FREETV_REF`) igual que `install.sh`,
-   - prueba la instalación completa contra una tele simulada,
-   - crea el Conector para Windows, Mac (Apple Silicon e Intel) y Linux,
-   - los sube a la *release* `v<versión>` (la de `connector/package.json`) y publica `site/` en GitHub Pages.
+- **Web:** GitHub Pages sirve la raíz de `main` (Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`). `.nojekyll` hace que se
+  sirva tal cual.
+- **Descargas:** en cada *push* a `main`, el flujo **Build and publish** (`.github/workflows/build.yml`) compila los paquetes de FreeTV
+  desde `PharmaJava/FreeTV` (rama en `FREETV_REF`), prueba la instalación contra una tele simulada, compila la app de Android y el
+  Conector, y los sube a la *release* **`descargas`**, que es la que enlaza la web (`FreeTV-Android.apk`, `FreeTV-Conector-*`).
+- Para meter una versión nueva de FreeTV sin cambiar nada aquí: **Actions → Build and publish → Run workflow**.
 
-Para que el Conector lleve la última versión de FreeTV: **Actions → Build and publish → Run workflow**. Al cambiar el Conector, sube la
-versión en `connector/package.json` (si no, se reemplazan los archivos de la misma *release*).
+### La app de Android
+
+- Se instala fuera de Google Play (el APK de la web): Android pide permiso para instalar apps de esa fuente y Play Protect avisa. La web
+  explica qué pulsar.
+- Las actualizaciones deben ir firmadas con la misma clave. La clave está en `android/app/freetv-release.keystore` (contraseña
+  `freetv-android`), a la vista: cómodo para una app familiar, pero quien la copie podría firmar una app que se haga pasar por esta.
+  Para usar una clave propia y secreta, guárdala en secretos de GitHub y pásala en las variables `FREETV_KEYSTORE`,
+  `FREETV_KEYSTORE_PASSWORD`, `FREETV_KEY_ALIAS` y `FREETV_KEY_PASSWORD` (`android/app/build.gradle`). Cambiar de clave obliga a
+  desinstalar la app antes de instalar la nueva.
 
 ### En local
 
@@ -70,13 +78,18 @@ bash scripts/build-bundle.sh ../../FreeTV   # compila los paquetes de FreeTV (ne
 npm test                                    # instalación completa contra una tele simulada (test/fake-tv.js)
 npm start                                   # el Conector, con la web en http://127.0.0.1:47321
 node scripts/build-exe.js                   # el ejecutable de este sistema, en dist/
+cd ../android
+gradle :core:test                           # el instalador de la app, contra la misma tele simulada (necesita Node)
+gradle :app:assembleRelease                 # el APK (necesita el SDK de Android)
 ```
 
 ### Estructura
 
 | Ruta | Qué |
 |---|---|
-| `site/` | La web (GitHub Pages y la que sirve el Conector) |
+| `index.html`, `app.js`, `style.css`, `icon.svg` | La web (GitHub Pages, la app de Android y el Conector usan la misma) |
+| `android/core/` | El instalador de la app de Android (Java): `Scanner`, `Ssh`, `Ssap` (con `WebSocketClient`), `Ipk`, `Installer`, `Api` |
+| `android/app/` | La app: `MainActivity` muestra la web y le da el puente al instalador |
 | `connector/src/main.js` | Servidor local del Conector: API (`/api/hello`, `/api/scan`, `/api/check`, `/api/install`, `/api/job/<id>`) y la web |
 | `connector/src/scan.js` | Búsqueda de teles (SSDP y puertos) |
 | `connector/src/lg.js` | La instalación en LG, paso a paso |
@@ -86,13 +99,15 @@ node scripts/build-exe.js                   # el ejecutable de este sistema, en 
 
 ## Límites conocidos
 
-- **Probado contra una tele simulada**, con los paquetes reales de FreeTV; **todavía no en una LG de verdad**. Los pasos son los de
+- **Probado contra una tele simulada**, con los paquetes reales de FreeTV (la app y el Conector); **todavía no en una LG de verdad** ni
+  la app en un móvil de verdad. Los pasos son los de
   `ares-install` y del instalador de FreeTV, pero conviene probarlo en una tele antes de dárselo a la familia.
+- **iPhone no:** Apple solo deja instalar apps desde la App Store (cuenta de desarrollador de pago y su revisión).
 - El Conector **no está firmado** (la firma cuesta dinero): Windows muestra «Windows protegió su PC» (→ *Más información → Ejecutar de
   todas formas*) y el Mac pide abrirlo con clic derecho o desde *Privacidad y seguridad*. La web lo explica.
 - Los accesos directos a canales de YouTube de la pestaña *Personalizado* van **sin foto de portada** (son logos de otros y aquí se
   publican los paquetes). Funcionan igual.
-- Samsung y Android TV: solo se detectan y se explica qué hacer.
+- Teles Samsung y Android TV: solo se detectan y se explica qué hacer.
 
 ## Créditos
 

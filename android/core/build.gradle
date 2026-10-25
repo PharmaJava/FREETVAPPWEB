@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+}
+
+// Android runs Java 8's library: compiling against it catches any newer call (List.of, String.repeat...).
+tasks.withType(JavaCompile).configureEach { options.release = 8; options.encoding = 'UTF-8' }
+
+dependencies {
+    api "com.github.mwiede:jsch:$rootProject.jschVersion"
+    api "org.apache.commons:commons-compress:$rootProject.compressVersion"
+    compileOnly 'org.json:json:20240303'          // Android has its own org.json
+    testImplementation 'org.json:json:20240303'
+}
+
+// The tests start the pretend TV of the computer Conector (connector/test/fake-tv.js, with Node) and use the FreeTV packages in
+// connector/bundle (connector/scripts/build-bundle.sh). A tiny runner (Check.java) runs them: no test library to download.
+tasks.register('installTest', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'io.freetv.core.Check'
+    args 'io.freetv.core.InstallerTest'
+    systemProperty 'freetv.repo', rootProject.projectDir.parentFile.absolutePath
+}
+test.dependsOn installTest

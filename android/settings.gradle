@@ -1,0 +1,21 @@
+// FreeTV for Android: `core` is the installer itself (plain Java, tested on any computer against a pretend TV), `app` is the
+// Android app around it (the web page, inside the app, talking to `core`). `app` needs the Android SDK, so it is only part of the
+// build where there is one (GitHub Actions); `gradle :core:test` works anywhere.
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = 'freetv-android'
+include ':core'
+if (System.getenv('ANDROID_HOME') || System.getenv('ANDROID_SDK_ROOT') || file('local.properties').exists()) {
+    include ':app'
+}

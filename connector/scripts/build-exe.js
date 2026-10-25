@@ -16,7 +16,8 @@ const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
-const SITE = path.join(ROOT, '..', 'site');
+const SITE = path.join(ROOT, '..');   // the web page lives at the repository's root (GitHub Pages)
+const SITE_FILES = ['index.html', 'app.js', 'style.css', 'icon.svg'];
 const BUNDLE = path.join(ROOT, 'bundle');
 const NAMES = { win32: 'Windows', darwin: process.arch === 'arm64' ? 'Mac-AppleSilicon' : 'Mac-Intel', linux: 'Linux' };
 const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : null; };
@@ -40,7 +41,7 @@ require('esbuild').buildSync({
 // 2. The blob: the program plus its assets (the page and FreeTV's packages).
 const assets = {};
 for (const f of fs.readdirSync(BUNDLE)) assets['bundle/' + f] = path.join(BUNDLE, f);
-for (const f of fs.readdirSync(SITE)) assets['site/' + f] = path.join(SITE, f);
+for (const f of SITE_FILES) assets['site/' + f] = path.join(SITE, f);
 fs.writeFileSync(path.join(DIST, 'sea-config.json'), JSON.stringify({
   main: path.join(DIST, 'conector.js'), output: path.join(DIST, 'sea-prep.blob'),
   disableExperimentalSEAWarning: true, useCodeCache: false, assets,

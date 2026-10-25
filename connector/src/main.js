@@ -23,9 +23,12 @@ const ORIGINS = new Set([SITE_ORIGIN, HOME, 'http://localhost:' + PORT].concat((
 // The pieces this program carries: inside the single executable (Node's SEA assets), or next to the sources when run with node.
 let sea = null;
 try { sea = require('node:sea'); if (!sea.isSea()) sea = null; } catch (e) { sea = null; }
+// The web page's files (at the repository's root, where GitHub Pages serves them).
+const SITE_FILES = ['index.html', 'app.js', 'style.css', 'icon.svg'];
 function asset(name) {
+  if (name.startsWith('site/') && !SITE_FILES.includes(name.slice(5))) return null;
   if (sea) { try { return Buffer.from(sea.getAsset(name)); } catch (e) { return null; } }
-  const roots = { bundle: path.join(__dirname, '..', 'bundle'), site: path.join(__dirname, '..', '..', 'site') };
+  const roots = { bundle: path.join(__dirname, '..', 'bundle'), site: path.join(__dirname, '..', '..') };
   const [root, ...rest] = name.split('/');
   try { return fs.readFileSync(path.join(roots[root], ...rest)); } catch (e) { return null; }
 }
