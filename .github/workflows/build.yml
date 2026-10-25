@@ -1,0 +1,134 @@
+# Builds everything and publishes it:
+#   - FreeTV's packages for LG, from PharmaJava/FreeTV (FREETV_REF), the same way FreeTV's install.sh builds them,
+#   - FreeTV Conector for Windows, macOS (Apple Silicon and Intel) and Linux, with those packages inside,
+#   - the web page (site/) on GitHub Pages, and the Conector downloads on the release named after connector/package.json's version.
+# Runs on every push to main, and by hand (Actions → Build and publish → Run workflow) to pick up a new FreeTV.
+name: Build and publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FREETV_REPO: PharmaJava/FreeTV
+  FREETV_REF: main
+  NODE_VERSION: '22.20.0'
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FREETV_REPO }}
+          ref: ${{ env.FREETV_REF }}
+          path: freetv
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build FreeTV's packages
+        run: bash connector/scripts/build-bundle.sh "$GITHUB_WORKSPACE/freetv"
+      - name: Test the install against a pretend TV
+        working-directory: connector
+        run: npm ci --no-audit --no-fund && npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle
+          path: connector/bundle/
+
+  connector:
+    needs: bundle
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-14
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: connector/bundle/
+      - name: Build the Conector
+        working-directory: connector
+        shell: bash
+        run: |
+          npm ci --no-audit --no-fund
+          node scripts/build-exe.js
+      - name: Intel Mac too (same Node version, built here)
+        if: runner.os == 'macOS'
+        working-directory: connector
+        run: |
+          curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-darwin-x64.tar.gz" | tar xz -C "$RUNNER_TEMP"
+          node scripts/build-exe.js --node "$RUNNER_TEMP/node-v$NODE_VERSION-darwin-x64/bin/node" --name Mac-Intel
+      - name: Mac downloads as .zip (keeps the "can run" bit)
+        if: runner.os == 'macOS'
+        working-directory: connector/dist
+        run: |
+          for arch in AppleSilicon Intel; do
+            mkdir -p "zip-$arch" && cp "FreeTV-Conector-Mac-$arch" "zip-$arch/FreeTV-Conector"
+            (cd "zip-$arch" && zip -q -X "../FreeTV-Conector-Mac-$arch.zip" FreeTV-Conector)
+            rm -rf "zip-$arch" "FreeTV-Conector-Mac-$arch"
+          done
+      - name: Check that it starts
+        if: runner.os == 'Linux'
+        working-directory: connector/dist
+        run: |
+          FREETV_NO_BROWSER=1 ./FreeTV-Conector-Linux & sleep 3
+          curl -fsS http://127.0.0.1:47321/api/hello | grep '"ready":true'
+          kill %1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conector-${{ runner.os }}
+          path: connector/dist/
+
+  publish:
+    needs: connector
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: conector-*
+          path: downloads
+          merge-multiple: true
+      - name: Release with the downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="v$(node -p 'require("./connector/package.json").version')"
+          ls -l downloads
+          if ! gh release view "$version" >/dev/null 2>&1; then
+            gh release create "$version" --title "FreeTV Conector $version" \
+              --notes "Descarga el Conector desde la web: https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/"
+          fi
+          gh release upload "$version" downloads/* --clobber
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: pages
+        uses: actions/deploy-pages@v4
