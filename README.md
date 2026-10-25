@@ -29,9 +29,11 @@ eso la web es la puerta de entrada y quien habla con la tele es un programa en e
 ```
 
 1. **La web** (`index.html`, `i18n.js`, `app.js`, `style.css` en la raíz, que es lo que sirve GitHub Pages). La portada pregunta
-   «¿Con qué lo vas a hacer?» (ordenador Windows o móvil Android) y da la descarga que toca. Si se elige un aparato distinto del que se
-   está usando (o se entra desde un iPhone), dice en qué aparato abrir la web. Todos los textos están en `i18n.js`, en español y en
-   inglés.
+   «¿Con qué lo vas a hacer?» (ordenador Windows o móvil Android) y explica el camino entero, paso a paso. Luego da la descarga que
+   toca. Si se elige un aparato distinto del que se está usando (o se entra desde un iPhone), dice en qué aparato abrir la web, con
+   botones para compartir o copiar el enlace (en el móvil abre el menú de compartir: WhatsApp…), repite los pasos y deja **preparar
+   la tele mientras tanto** desde ese mismo aparato (la lista del Modo Desarrollador). Al terminar la lista, dice dónde seguir. Todos
+   los textos están en `i18n.js`, en español y en inglés.
 2. **El programa para ordenador** (`connector/`, en Node, empaquetado como un solo `.exe`): al abrirlo arranca un pequeño servidor
    solo para ese ordenador (`127.0.0.1:47321`). La web de GitHub le habla ahí; si el navegador no la deja, el programa abre él mismo
    la misma web. En Windows lleva nombre, icono y versión propios, y si algo falla la ventana no se cierra sola: espera a que se pulse
@@ -128,7 +130,8 @@ gradle :app:assembleRelease                 # el APK (necesita el SDK de Android
 - **Probado contra una tele simulada**, con los paquetes reales de FreeTV (el programa y la app); **todavía no en una LG de verdad** ni
   la app en un móvil de verdad. Los pasos son los de `ares-install` y del instalador de FreeTV, pero conviene probarlo en una tele antes
   de dárselo a la familia. Que el programa arranca en Windows y Mac sí se comprueba en cada compilación.
-- **iPhone no:** Apple solo deja instalar apps desde la App Store (cuenta de desarrollador de pago y su revisión).
+- **iPhone no instala:** Apple solo deja instalar apps desde la App Store (cuenta de desarrollador de pago y su revisión). Desde un
+  iPhone la web explica los pasos, deja preparar la tele y manda a abrirla en el ordenador o en un Android.
 - El programa **no está firmado** (la firma cuesta dinero): Windows muestra «Windows protegió su PC» (→ *Más información → Ejecutar de
   todas formas*) y el Mac pide abrirlo con clic derecho o desde *Privacidad y seguridad*. La web lo explica.
 - Los accesos directos a canales de YouTube de la pestaña *Personalizado* van **sin foto de portada** (son logos de otros y aquí se

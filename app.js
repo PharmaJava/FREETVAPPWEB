@@ -65,7 +65,11 @@
 
   /* ---------- steps ---------- */
   var current = 'start', history = [];
+  // Only the app and the computer program can install. Elsewhere (an iPhone, or the "other" device) the TV can still be got ready,
+  // and then the page says where to continue instead of looking for the TV.
+  function canInstall() { return DEVICE === 'app' || DEVICE === 'local' || (DEVICE === 'computer' && state.via === 'pc'); }
   function go(step, back) {
+    if (step === 'find' && !canInstall()) { state.prepared = true; step = 'connector'; showGet(); }
     // With the app or the computer program already there, there is nothing to do on step 1: pass it, forwards or backwards.
     if (step === 'connector' && (DEVICE === 'app' || DEVICE === 'local' || (state.connected && state.via === 'pc'))) {
       step = current === 'brand' ? 'start' : 'brand';
@@ -107,8 +111,15 @@
     $('#get-title').textContent = T(pcHere ? 'get.pc.title' : androidHere ? 'get.android.title'
       : v === 'pc' ? 'get.elsewhere.pc.title' : 'get.elsewhere.android.title');
     $('#elsewhere-text').textContent = T(v === 'pc' ? 'get.elsewhere.pc' : 'get.elsewhere.android');
-    $('#elsewhere-address').textContent = SITE;
+    var a = $('#elsewhere-address');
+    a.textContent = SITE;
+    a.href = 'https://' + SITE + '/';
     $('#elsewhere-note').textContent = v === 'android' && DEVICE === 'ios' ? T('get.elsewhere.ios') : '';
+    // Back from getting the TV ready on this device: say where to go on now.
+    if (state.prepared && !pcHere && !androidHere) {
+      $('#elsewhere-text').textContent = T('meanwhile.done', { device: T(v === 'pc' ? 'device.pc' : 'device.android') });
+    }
+    $('#meanwhile').hidden = !!state.prepared;
   }
   redraws.push(showGet);
   $$('[data-via]').forEach(function (b) {
@@ -116,6 +127,20 @@
   });
   state.via = load('via') || (DEVICE === 'android' ? 'android' : 'pc');
   $('#dl-apk').href = APK;
+  // Sending the address to the other device: the phone's share sheet (WhatsApp…) where there is one, and a copy button.
+  if (navigator.share) {
+    $('#share').hidden = false;
+    $('#share').addEventListener('click', function () {
+      navigator.share({ title: 'FreeTV', url: 'https://' + SITE + '/' }).catch(function () { /* closed */ });
+    });
+  }
+  $('#copy').addEventListener('click', function () {
+    var btn = this, url = 'https://' + SITE + '/';
+    function done() { btn.textContent = T('copied'); setTimeout(function () { btn.textContent = T('copy'); }, 2000); }
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () { prompt('', url); });
+    else prompt('', url);
+  });
+  $('#meanwhile').addEventListener('click', function () { go('brand'); });
 
   /* ---------- 1. the computer program ---------- */
   function detectOs() {
