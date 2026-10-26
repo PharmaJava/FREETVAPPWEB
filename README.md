@@ -57,7 +57,7 @@ Los instaladores explican los problemas en español; la web tiene su propio text
 | Tele | En esta web |
 |---|---|
 | **LG (webOS)** | Instalación automática completa |
-| Samsung (Tizen) | Se detecta, pero no es automático: FreeTV pide un certificado de Samsung de tu cuenta. Enlace a la guía |
+| Samsung (Tizen) | Se detecta, pero no es automático: FreeTV pide un certificado de Samsung de tu cuenta. Enlace a la guía. La web cuenta que, con TizenBrew en la tele, FreeTV trae YouTube AdFree y Twitch AdFree y una tienda de apps de la comunidad |
 | Android TV / Google TV | Se detecta, pero no es automático: hay que compilar la app. Enlace a Free My TV y a la guía |
 
 ### Seguridad y privacidad

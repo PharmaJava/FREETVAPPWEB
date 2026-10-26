@@ -51,6 +51,8 @@ window.FREETV_TEXTS = {
     'other.samsung.title': 'Samsung: todavía no es automático',
     'other.samsung.body': '<p>FreeTV tiene una versión <b>experimental</b> para Samsung de 2017 en adelante, pero instalarla pide un <b>certificado de ' +
       'Samsung</b> creado con tu cuenta, y eso todavía no se puede hacer con un botón. Además, en Samsung ninguna app puede sustituir el botón Home.</p>' +
+      '<p>Con <a href="https://github.com/reisxd/TizenBrew" target="_blank" rel="noopener">TizenBrew</a> en la tele, FreeTV trae en el estante ' +
+      '<b>YouTube AdFree</b> y <b>Twitch AdFree</b>, y su Tienda muestra las apps de la comunidad de Samsung.</p>' +
       '<p>Si te animas (o alguien de la familia sabe algo de ordenadores): <a href="https://github.com/PharmaJava/FreeTV/blob/main/docs/SAMSUNG.md" ' +
       'target="_blank" rel="noopener">guía de Samsung</a>.</p>',
     'other.android.title': 'Android TV y Google TV: todavía no es automático',
@@ -243,6 +245,8 @@ window.FREETV_TEXTS = {
     'other.samsung.title': 'Samsung: not automatic yet',
     'other.samsung.body': '<p>FreeTV has an <b>experimental</b> version for Samsung TVs from 2017 on, but installing it needs a <b>Samsung certificate</b> ' +
       'made with your account, and that cannot be done with one button yet. Also, on Samsung no app can take over the Home button.</p>' +
+      '<p>With <a href="https://github.com/reisxd/TizenBrew" target="_blank" rel="noopener">TizenBrew</a> on the TV, FreeTV puts ' +
+      '<b>YouTube AdFree</b> and <b>Twitch AdFree</b> on its shelf, and its Store shows Samsung\'s community apps.</p>' +
       '<p>If you want to try (or someone in the family knows a bit about computers): <a href="https://github.com/PharmaJava/FreeTV/blob/main/docs/SAMSUNG.md" ' +
       'target="_blank" rel="noopener">Samsung guide</a> (in Spanish).</p>',
     'other.android.title': 'Android TV and Google TV: not automatic yet',
