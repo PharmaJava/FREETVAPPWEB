@@ -15,6 +15,7 @@ android {
         targetSdk 35
         versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
         versionName '1.0.' + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     signingConfigs {
@@ -56,6 +57,11 @@ android {
 
 dependencies {
     implementation project(':core')
+    // Tests that run on an emulator (EmulatorInstallTest): the whole app against a pretend TV. Only the tests use these.
+    androidTestImplementation 'androidx.test:core:1.6.1'
+    androidTestImplementation 'androidx.test:runner:1.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'junit:junit:4.13.2'
 }
 
 // Inside the app: the same web page GitHub Pages serves (the repository's root) and FreeTV's packages (connector/bundle).

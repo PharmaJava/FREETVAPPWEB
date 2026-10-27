@@ -413,7 +413,7 @@
     if (!quiet) $('#city').value = c.name;
   }
 
-  $('#pass').addEventListener('input', function () { this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); });
+  $('#pass').addEventListener('input', function () { this.value = this.value.replace(/[^A-Za-z0-9]/g, ''); });
 
   $('#install-btn').addEventListener('click', function () {
     var msg = $('#details-msg');

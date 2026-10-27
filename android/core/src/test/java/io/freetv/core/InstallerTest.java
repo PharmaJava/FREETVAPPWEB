@@ -108,6 +108,15 @@ public class InstallerTest {
         }
     }
 
+    public void testPassphraseInSmallLettersStillWorks() throws Exception {
+        Installer.Job job = new Installer.Job("127.0.0.1", false);
+        try (Tv tv = new Tv()) {
+            Installer.run(job, bundle(), tv.passphrase.toLowerCase(java.util.Locale.ROOT), settings(false));
+            tv.finish();
+            assertEquals("done", job.state);
+        }
+    }
+
     public void testWrongPassphraseStopsBeforeTouchingTheTv() throws Exception {
         Installer.Job job = new Installer.Job("127.0.0.1", false);
         try (Tv tv = new Tv()) {

@@ -11,6 +11,7 @@ const { Server } = require('ssh2');
 const WebSocket = require('ws');
 
 function start(opts = {}) {
+  const ICONS = 'http://' + (opts.iconHost || '127.0.0.1') + ':8090';
   const passphrase = opts.passphrase || 'A1B2C3';
   const { privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
   const encrypted = privateKey.export({ type: 'pkcs1', format: 'pem', cipher: 'aes-128-cbc', passphrase });
@@ -94,9 +95,9 @@ function start(opts = {}) {
         }, 300);
       } else if (msg.uri === 'ssap://com.webos.applicationManager/listLaunchPoints') {
         ws.send(JSON.stringify({ type: 'response', id: msg.id, payload: { launchPoints: [
-          { id: 'netflix', title: 'Netflix', icon: 'http://127.0.0.1:8090/netflix.png', largeIcon: 'http://127.0.0.1:8090/netflix-big.png', bgColor: '#000' },
-          { id: 'youtube.leanback.v4', title: 'YouTube', icon: 'http://127.0.0.1:8090/yt.png' },
-          { id: 'com.webos.app.hidden', title: 'Hidden', hidden: true, icon: 'http://127.0.0.1:8090/h.png' },
+          { id: 'netflix', title: 'Netflix', icon: ICONS + '/netflix.png', largeIcon: ICONS + '/netflix-big.png', bgColor: '#000' },
+          { id: 'youtube.leanback.v4', title: 'YouTube', icon: ICONS + '/yt.png' },
+          { id: 'com.webos.app.hidden', title: 'Hidden', hidden: true, icon: ICONS + '/h.png' },
         ] } }));
       } else if (msg.uri === 'ssap://tv/getExternalInputList') {
         ws.send(JSON.stringify({ type: 'response', id: msg.id, payload: { devices: [{ id: 'HDMI_1', label: 'HDMI 1', appId: 'com.webos.app.hdmi1' }] } }));

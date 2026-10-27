@@ -53,19 +53,24 @@ public final class Ssh implements AutoCloseable {
         }
     }
 
-    /** Unlocks the key with the passphrase the person typed. Returns the plain key (PEM), kept in memory only. */
+    /** Unlocks the key with the passphrase the person typed. Returns the plain key (PEM), kept in memory only.
+     *  The TV shows capital letters, but people type small ones: as typed, in capitals and in small letters are all tried. */
     public static byte[] unlockKey(byte[] encrypted, String passphrase) throws Problem {
-        try {
-            KeyPair kp = KeyPair.load(new JSch(), encrypted, null);
-            if (kp.isEncrypted() && !kp.decrypt(passphrase == null ? "" : passphrase.trim())) throw new JSchException("bad passphrase");
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            kp.writePrivateKey(out);
-            kp.dispose();
-            return out.toByteArray();
-        } catch (JSchException e) {
-            throw new Problem("passphrase", "La passphrase no es correcta. Mírala otra vez en la app Developer Mode de la tele "
-                    + "(son 6 letras y números; cambia si reinicias el Key Server).");
+        String typed = passphrase == null ? "" : passphrase.trim();
+        for (String candidate : new String[] { typed, typed.toUpperCase(java.util.Locale.ROOT), typed.toLowerCase(java.util.Locale.ROOT) }) {
+            try {
+                KeyPair kp = KeyPair.load(new JSch(), encrypted, null);
+                if (kp.isEncrypted() && !kp.decrypt(candidate)) { kp.dispose(); continue; }
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                kp.writePrivateKey(out);
+                kp.dispose();
+                return out.toByteArray();
+            } catch (JSchException e) {
+                // the next one
+            }
         }
+        throw new Problem("passphrase", "La passphrase no es correcta. Mírala otra vez en la app Developer Mode de la tele "
+                + "(son 6 letras y números; cambia si reinicias el Key Server).");
     }
 
     public static Ssh connect(String ip, byte[] plainKey) throws Problem {

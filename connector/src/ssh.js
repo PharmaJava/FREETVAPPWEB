@@ -33,15 +33,17 @@ function fetchKey(ip) {
   });
 }
 
-/** Unlocks the key with the passphrase the person typed. Returns the plain PEM (kept in memory only). */
+/** Unlocks the key with the passphrase the person typed. Returns the plain PEM (kept in memory only).
+ *  The TV shows capital letters, but people type small ones or mix them up: as typed, in capitals and in small letters are all tried. */
 function unlockKey(encrypted, passphrase) {
-  try {
-    return crypto.createPrivateKey({ key: encrypted, passphrase: String(passphrase || '').trim() })
-      .export({ type: 'pkcs1', format: 'pem' });
-  } catch (e) {
-    throw new Problem('passphrase', 'La passphrase no es correcta. Mírala otra vez en la app Developer Mode de la tele ' +
-      '(son 6 letras y números; cambia si reinicias el Key Server).');
+  const typed = String(passphrase || '').trim();
+  for (const candidate of [typed, typed.toUpperCase(), typed.toLowerCase()]) {
+    try {
+      return crypto.createPrivateKey({ key: encrypted, passphrase: candidate }).export({ type: 'pkcs1', format: 'pem' });
+    } catch (e) { /* the next one */ }
   }
+  throw new Problem('passphrase', 'La passphrase no es correcta. Mírala otra vez en la app Developer Mode de la tele ' +
+    '(son 6 letras y números; cambia si reinicias el Key Server).');
 }
 
 function connect(ip, key) {

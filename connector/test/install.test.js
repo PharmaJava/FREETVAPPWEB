@@ -25,6 +25,11 @@ async function install(tvOpts, passphrase, settings) {
   return { tv, job };
 }
 
+test('a passphrase typed in small letters still unlocks the key', async () => {
+  const { job } = await install({}, 'a1b2c3', SETTINGS);
+  assert.strictEqual(job.state, 'done', JSON.stringify(job.error));
+});
+
 test('installs both packages with the settings and the TV apps, and configures the helper', async () => {
   const { tv, job } = await install({}, undefined, SETTINGS);
   assert.strictEqual(job.state, 'done', JSON.stringify(job.error));

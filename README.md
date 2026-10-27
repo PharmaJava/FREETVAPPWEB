@@ -21,7 +21,7 @@ Either way: they get the TV ready by following a checklist, pick their TV from a
 
 A landing page, then the installer:
 
-- **Landing:** what FreeTV is (with a real photo from an LG OLED), eight features, four screens from the app itself, how it works in
+- **Landing:** what FreeTV is (with a real photo from an LG OLED), twelve features, the real screenshots and videos (GIFs) of FreeTV taken straight from the FreeTV repository on GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, so they are always the current ones), how it works in
   three steps, which TVs it works on and an FAQ. Everything is in `index.html` with its texts in `landing.js` (and the installer's in
   `i18n.js`), in both languages.
 - **Installer:** four steps with a progress bar: *1 get the program or the app* (skipped when it is already open) → *2 get the TV
@@ -99,7 +99,7 @@ installation stay in Spanish.
   - The run's summary says which FreeTV commit the downloads carry.
 - To pick up a new FreeTV right now without changing anything here: **Actions → Build and publish → Run workflow**.
 - To change a text: `landing.js` (the landing page) or `i18n.js` (the installer), in both languages (same keys).
-- To change the pictures: see `tools/screenshots.js`.
+- The pictures are not here: the page loads them from the FreeTV repository (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Change them there. Only `img/hero.webp` is kept as a fallback for the top photo.
 
 ### The Android app
 
@@ -131,8 +131,7 @@ gradle :app:assembleRelease                 # the APK (needs the Android SDK)
 | `index.html`, `style.css`, `app.js`, `icon.svg` | The page (GitHub Pages, the Android app and the program use the same one) |
 | `i18n.js` | The installer's texts, in Spanish and English |
 | `landing.js` | The landing page's texts, in Spanish and English |
-| `img/` | The pictures: `hero.webp` (an LG OLED), `og.jpg` (social cards) and the app's screens `<name>-<en\|es>.webp` |
-| `tools/` | `screenshots.js` (makes the app's screens) and `fake-tizenbrew.js` (a pretend TizenBrew for them) |
+| `img/` | `hero.webp` (fallback for the top photo) and `og.jpg` (social cards). The screenshots and GIFs come from the FreeTV repository |
 | `connector/src/main.js` | The computer program: API (`/api/hello`, `/api/scan`, `/api/check`, `/api/install`, `/api/job/<id>`) and the page |
 | `connector/src/scan.js` | Finding TVs (SSDP and ports) |
 | `connector/src/lg.js` | The LG install, step by step |
@@ -154,8 +153,8 @@ gradle :app:assembleRelease                 # the APK (needs the Android SDK)
   Mac asks to open it with a right click or from *Privacy & Security*. The page explains it.
 - The YouTube channel shortcuts in the *Custom* tab come **without cover pictures** (they are other people's logos and the packages
   are published here). They work the same.
-- The screens on the page come from the app running in a browser (with a pretend Samsung TV), not from a real TV; the hero photo is
-  from an LG OLED.
+- The screenshots and videos on the page are the real ones from FreeTV on an LG OLED (loaded from the FreeTV repository).
+- The passphrase may be typed in capitals or small letters: the installers try both.
 - Samsung and Android TVs: only detected, and the page explains what to do.
 
 ## Credits
@@ -185,7 +184,7 @@ terminal ni nada más que instalar.
 
 Una página de presentación y, después, el instalador:
 
-- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), ocho ventajas, cuatro pantallas de la propia app, cómo funciona
+- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), doce ventajas, las capturas y vídeos (GIF) reales de FreeTV tomados directamente del repositorio de FreeTV en GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, así siempre son las actuales), cómo funciona
   en tres pasos, en qué teles funciona y unas preguntas frecuentes. Todo está en `index.html`, con sus textos en `landing.js` (y los
   del instalador en `i18n.js`), en los dos idiomas.
 - **Instalador:** cuatro pasos con barra de progreso: *1 conseguir el programa o la app* (se salta si ya está abierto) → *2 preparar
@@ -269,7 +268,7 @@ Los instaladores explican los problemas en español; la web tiene su propio text
   - El resumen de la ejecución dice qué commit de FreeTV llevan las descargas.
 - Para meter una versión nueva de FreeTV ahora mismo sin cambiar nada aquí: **Actions → Build and publish → Run workflow**.
 - Para cambiar un texto: `landing.js` (la presentación) o `i18n.js` (el instalador), en los dos idiomas (mismas claves).
-- Para cambiar las imágenes: mira `tools/screenshots.js`.
+- Las imágenes no están aquí: la web las carga del repositorio de FreeTV (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Cámbialas allí. Solo `img/hero.webp` se guarda como respaldo de la foto de arriba.
 
 ### La app de Android
 
@@ -302,8 +301,7 @@ gradle :app:assembleRelease                 # el APK (necesita el SDK de Android
 | `index.html`, `style.css`, `app.js`, `icon.svg` | La web (GitHub Pages, la app de Android y el programa usan la misma) |
 | `i18n.js` | Los textos del instalador, en español e inglés |
 | `landing.js` | Los textos de la presentación, en español e inglés |
-| `img/` | Las imágenes: `hero.webp` (una LG OLED), `og.jpg` (tarjetas de redes sociales) y las pantallas de la app `<nombre>-<en\|es>.webp` |
-| `tools/` | `screenshots.js` (hace las pantallas de la app) y `fake-tizenbrew.js` (un TizenBrew de mentira para ellas) |
+| `img/` | `hero.webp` (respaldo de la foto de arriba) y `og.jpg` (tarjetas de redes sociales). Las capturas y los GIF vienen del repositorio de FreeTV |
 | `connector/src/main.js` | El programa del ordenador: API (`/api/hello`, `/api/scan`, `/api/check`, `/api/install`, `/api/job/<id>`) y la web |
 | `connector/src/scan.js` | Búsqueda de teles (SSDP y puertos) |
 | `connector/src/lg.js` | La instalación en LG, paso a paso |
@@ -325,8 +323,8 @@ gradle :app:assembleRelease                 # el APK (necesita el SDK de Android
   todas formas*) y el Mac pide abrirlo con clic derecho o desde *Privacidad y seguridad*. La web lo explica.
 - Los accesos directos a canales de YouTube de la pestaña *Personalizado* van **sin foto de portada** (son logos de otros y aquí se
   publican los paquetes). Funcionan igual.
-- Las pantallas de la página salen de la app funcionando en un navegador (con una Samsung de mentira), no de una tele real; la foto
-  de portada es de una LG OLED.
+- Las capturas y los vídeos de la página son los reales de FreeTV en una LG OLED (se cargan del repositorio de FreeTV).
+- La passphrase se puede escribir en mayúsculas o minúsculas: los instaladores prueban las dos.
 - Teles Samsung y Android TV: solo se detectan y se explica qué hacer.
 
 ## Créditos

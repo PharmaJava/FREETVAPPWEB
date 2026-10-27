@@ -107,6 +107,58 @@ jobs:
           name: download-android
           path: dist/
 
+  android-emulator:
+    # The app on a real Android (an emulator), as a person uses it, against a pretend LG TV running on this machine
+    # (the emulator reaches it as 10.0.2.2): EmulatorInstallTest. The oldest Android we support is 8 (API 26); 9 and 14 stand for the range.
+    needs: bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [28, 34]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: connector/bundle/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Let the emulator use hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start the pretend TV
+        working-directory: connector
+        run: |
+          npm ci --no-audit --no-fund
+          ICON_HOST=10.0.2.2 nohup node test/fake-tv-daemon.js > ../fake-tv.log 2>&1 &
+          for i in $(seq 1 20); do grep -q READY ../fake-tv.log && break; sleep 1; done
+          cat ../fake-tv.log
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: gradle --no-daemon -p android :app:connectedDebugAndroidTest
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: android-emulator-report-${{ matrix.api }}
+          path: android/app/build/reports/androidTests/
+
   connector:
     needs: bundle
     strategy:
@@ -138,21 +190,15 @@ jobs:
         run: |
           curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-darwin-x64.tar.gz" | tar xz -C "$RUNNER_TEMP"
           node scripts/build-exe.js --node "$RUNNER_TEMP/node-v$NODE_VERSION-darwin-x64/bin/node" --name Mac-Intel
-      - name: Check that it starts (Windows, Mac and Linux)
-        working-directory: connector/dist
+      - name: Test the packed program end to end (Windows, Mac and Linux)
+        # The very file people download, opened the way they open it, installing on a pretend LG TV: the page it serves, finding the
+        # TV, a wrong passphrase refused, the right one installing both packages and configuring the helper (connector/test/e2e.js).
+        working-directory: connector
         shell: bash
         run: |
-          exe=$(ls FreeTV-* | grep -v Intel | head -1)
-          echo "Starting $exe"
-          FREETV_NO_BROWSER=1 "./$exe" > started.log 2>&1 &
-          ok=
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:47321/api/hello | grep -q '"ready":true'; then ok=1; break; fi
-            sleep 1
-          done
-          cat started.log; rm -f started.log
-          if [ "$RUNNER_OS" = Windows ]; then taskkill //F //IM "$exe" || true; else kill %1 || true; fi
-          [ -n "$ok" ] || { echo "The Conector did not answer"; exit 1; }
+          exe=$(ls dist/FreeTV-* | grep -v Intel | head -1)
+          echo "Testing $exe"
+          node test/e2e.js "$exe"
       - name: Mac downloads as .zip (keeps the "can run" bit)
         if: runner.os == 'macOS'
         working-directory: connector/dist
@@ -168,7 +214,7 @@ jobs:
           path: connector/dist/
 
   publish:
-    needs: [android, connector]
+    needs: [android, android-emulator, connector]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

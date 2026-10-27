@@ -212,7 +212,7 @@ h2 { font-size: 32px; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 22p
 .center { text-align: center; }
 
 #screens { padding-top: 24px; padding-bottom: 24px; }
-.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-bottom: 14px; }
+.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 22px; }
 .shots figure { margin: 0; }
 .shots img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); background: #1b1d22; }
 #screens .small { text-align: center; }
@@ -245,6 +245,7 @@ h2 { font-size: 32px; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 22p
 .foot p { margin: 0 auto; max-width: 760px; }
 
 @media (max-width: 920px) {
+  .shots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nav { display: none; }
   .top-right { margin-left: auto; }
   .hero-grid { grid-template-columns: 1fr; gap: 28px; }
@@ -262,3 +263,12 @@ h2 { font-size: 32px; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 22p
   .band { padding: 40px 0; }
   .cta.small { display: none; }
 }
+
+.need { background: var(--wait-soft); border-radius: 14px; padding: 6px 18px 10px; margin: 0 0 18px; }
+.need ul { margin: 0; padding-left: 22px; }
+.need li { margin: 6px 0; }
+.checks { margin: 0 0 14px; padding-left: 22px; }
+.checks li { margin: 6px 0; }
+.fixes { background: var(--wait-soft); border-radius: 14px; padding: 10px 18px; margin: 12px 0 16px; font-size: 16px; }
+.fixes ul, .fixes ol { margin: 6px 0; padding-left: 22px; }
+.fixes li { margin: 6px 0; }
