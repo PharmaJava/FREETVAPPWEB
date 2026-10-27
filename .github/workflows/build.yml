@@ -265,6 +265,14 @@ jobs:
               --notes "Lo que la compilación guarda entre una vez y otra (el certificado de autor de FreeTV para Samsung). No es una descarga."
           fi
           gh release upload datos-compilacion build-data/tizen-author.json --clobber
+      - name: Remove releases no longer used
+        # v1.0.0: the first downloads ("FreeTV-Conector-…"), before the page linked to "descargas".
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for old in v1.0.0; do
+            if gh release view "$old" >/dev/null 2>&1; then gh release delete "$old" --yes --cleanup-tag && echo "Removed $old"; fi
+          done
       - name: Note which FreeTV these downloads carry
         run: python3 -c "import json; print(json.load(open('bundle/bundle.json'))['freetv'])" > downloads/freetv-version.txt
       - name: Put the downloads on the "descargas" release
