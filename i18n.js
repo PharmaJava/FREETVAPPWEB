@@ -3,16 +3,20 @@
    {name} in a text is filled with values.name. Keep both languages with the same keys. */
 window.FREETV_TEXTS = {
   es: {
-    'page.title': 'FreeTV para tu tele',
-    'page.desc': 'Pon FreeTV en tu tele LG sin saber programar: una pantalla de inicio limpia, sin anuncios.',
+    'page.title': 'FreeTV: un inicio limpio y sin anuncios para tu tele',
+    'page.desc': 'Quita los anuncios del inicio de tu tele LG. FreeTV es gratis, de código abierto y 100 % reversible. Instálalo desde un ordenador Windows o un móvil Android.',
     'lang.switch': 'English',
     'lang.switch.aria': 'Cambiar el idioma a inglés',
     'conn.on': 'Programa abierto',
     'conn.off': 'Programa cerrado',
     'back': '← Volver',
     'next': 'Seguir',
-    'crumb.1': 'Paso 1 de 5', 'crumb.2': 'Paso 2 de 5', 'crumb.3': 'Paso 3 de 5', 'crumb.4': 'Paso 4 de 5', 'crumb.5': 'Paso 5 de 5',
+    'crumb.1': 'Paso 1 de 4', 'crumb.2': 'Paso 2 de 4', 'crumb.3': 'Paso 3 de 4', 'crumb.4': 'Paso 4 de 4',
 
+    'wiz.h1': 'Instala FreeTV en tu tele',
+    'wiz.lead': 'Necesitas una tele LG con webOS y un ordenador Windows o un móvil Android conectado al mismo wifi que la tele. Tardas unos 10 minutos.',
+    'prep.other': '¿No es una LG? Mira qué hay para tu tele',
+    'pass.where': '¿Dónde veo la passphrase?',
     'start.h1': 'Una pantalla de inicio limpia para tu tele',
     'start.lead': 'FreeTV cambia el inicio de la tele, lleno de anuncios, por uno sencillo: tus apps, el tiempo y sugerencias solo de lo que tienes. ' +
       'No se rompe nada y <strong>todo se puede deshacer</strong>.',
@@ -192,21 +196,26 @@ window.FREETV_TEXTS = {
     'err.other': 'Algo falló.',
 
     'footer': 'FreeTV es libre (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">Código de FreeTV</a> · ' +
-      '<a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">Código de esta web</a> · No está afiliado a LG. ' +
+      '<a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">Código de esta web</a> · ' +
+      '<a href="https://github.com/PharmaJava/FREETVAPPWEB/releases/tag/descargas" target="_blank" rel="noopener">Descargas</a> · No está afiliado a LG ni a Samsung. ' +
       'Tus datos no salen de tu casa: la passphrase solo va de tu móvil (o tu ordenador) a la tele.'
   },
 
   en: {
-    'page.title': 'FreeTV for your TV',
-    'page.desc': 'Put FreeTV on your LG TV without knowing anything about computers: a clean home screen, with no ads.',
+    'page.title': 'FreeTV: a clean, ad-free home screen for your TV',
+    'page.desc': 'Take the ads off your LG TV\'s home screen. FreeTV is free, open source and 100% reversible. Install it from a Windows PC or an Android phone.',
     'lang.switch': 'Español',
     'lang.switch.aria': 'Switch the language to Spanish',
     'conn.on': 'Program open',
     'conn.off': 'Program closed',
     'back': '← Back',
     'next': 'Continue',
-    'crumb.1': 'Step 1 of 5', 'crumb.2': 'Step 2 of 5', 'crumb.3': 'Step 3 of 5', 'crumb.4': 'Step 4 of 5', 'crumb.5': 'Step 5 of 5',
+    'crumb.1': 'Step 1 of 4', 'crumb.2': 'Step 2 of 4', 'crumb.3': 'Step 3 of 4', 'crumb.4': 'Step 4 of 4',
 
+    'wiz.h1': 'Install FreeTV on your TV',
+    'wiz.lead': 'You need an LG TV with webOS and a Windows computer or an Android phone on the same Wi-Fi as the TV. It takes about 10 minutes.',
+    'prep.other': 'Not an LG? See what there is for your TV',
+    'pass.where': 'Where do I find the passphrase?',
     'start.h1': 'A clean home screen for your TV',
     'start.lead': 'FreeTV replaces your TV\'s home screen, full of ads, with a simple one: your apps, the weather and suggestions only from the ' +
       'services you have. Nothing breaks and <strong>everything can be undone</strong>.',
@@ -386,7 +395,8 @@ window.FREETV_TEXTS = {
     'err.other': 'Something went wrong.',
 
     'footer': 'FreeTV is free software (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">FreeTV\'s code</a> · ' +
-      '<a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">This site\'s code</a> · Not affiliated with LG. ' +
+      '<a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">This site\'s code</a> · ' +
+      '<a href="https://github.com/PharmaJava/FREETVAPPWEB/releases/tag/descargas" target="_blank" rel="noopener">Downloads</a> · Not affiliated with LG or Samsung. ' +
       'Your data stays at home: the passphrase only goes from your phone (or your computer) to the TV.'
   }
 };

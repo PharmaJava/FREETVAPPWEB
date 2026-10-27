@@ -17,7 +17,7 @@ const { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const SITE = path.join(ROOT, '..');   // the web page lives at the repository's root (GitHub Pages)
-const SITE_FILES = ['index.html', 'i18n.js', 'app.js', 'style.css', 'icon.svg'];
+const SITE_FILES = ['index.html', 'i18n.js', 'landing.js', 'app.js', 'style.css', 'icon.svg'];
 const BUNDLE = path.join(ROOT, 'bundle');
 const NAMES = { win32: 'Windows', darwin: process.arch === 'arm64' ? 'Mac-AppleSilicon' : 'Mac-Intel', linux: 'Linux' };
 const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : null; };

@@ -3,7 +3,10 @@
 #   - the Android app (android/), with those packages and the web page inside,
 #   - FreeTV for Windows (the computer program, also for macOS and Linux), with the same inside,
 #   - all of them on the release "descargas", the one the web page links to.
-# Runs on every push to main, and by hand (Actions → Build and publish → Run workflow) to pick up a new FreeTV.
+# Runs on every push to main, by hand (Actions → Build and publish → Run workflow), and every 6 hours: then it only builds when
+# FreeTV (FREETV_REPO) has a newer commit than the one the downloads on the release were built from (freetv-version.txt there), so a
+# change in FreeTV reaches the downloads by itself. (GitHub pauses scheduled runs of a repository with no activity for 60 days: any
+# push or a manual run starts them again.)
 name: Build and publish
 
 on:
@@ -11,6 +14,8 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
 
 env:
   FREETV_REPO: PharmaJava/FreeTV
@@ -22,7 +27,25 @@ permissions:
   contents: read
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+    steps:
+      - id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(git ls-remote "https://github.com/$FREETV_REPO" "refs/heads/$FREETV_REF" | cut -f1)
+          built=$(gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" -p freetv-version.txt -O - 2>/dev/null || true)
+          echo "FreeTV now: $latest · downloads built from: ${built:-nothing yet}"
+          if [ "$GITHUB_EVENT_NAME" != schedule ] || [ -z "$latest" ] || [ "$latest" != "$built" ]; then build=true; else build=false; fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "Build: $build" >> "$GITHUB_STEP_SUMMARY"
+
   bundle:
+    needs: check
+    if: needs.check.outputs.build == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +61,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build FreeTV's packages
-        run: bash connector/scripts/build-bundle.sh "$GITHUB_WORKSPACE/freetv"
+        run: |
+          bash connector/scripts/build-bundle.sh "$GITHUB_WORKSPACE/freetv"
+          echo "FreeTV commit in these downloads: $(git -C freetv log -1 --format='%h %s')" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Test the install against a pretend TV
         working-directory: connector
         run: npm ci --no-audit --no-fund && npm test
@@ -155,6 +180,12 @@ jobs:
           pattern: download-*
           path: downloads
           merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: bundle
+      - name: Note which FreeTV these downloads carry
+        run: python3 -c "import json; print(json.load(open('bundle/bundle.json'))['freetv'])" > downloads/freetv-version.txt
       - name: Put the downloads on the "descargas" release
         env:
           GH_TOKEN: ${{ github.token }}

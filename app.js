@@ -55,6 +55,9 @@
     $$('[data-t]').forEach(function (el) { el.innerHTML = T(el.getAttribute('data-t')); });
     $$('[data-t-placeholder]').forEach(function (el) { el.setAttribute('placeholder', T(el.getAttribute('data-t-placeholder'))); });
     $$('[data-t-aria]').forEach(function (el) { el.setAttribute('aria-label', T(el.getAttribute('data-t-aria'))); });
+    $$('[data-t-alt]').forEach(function (el) { el.setAttribute('alt', T(el.getAttribute('data-t-alt'))); });
+    $$('[data-src]').forEach(function (el) { if (!el.getAttribute('src')) el.setAttribute('src', el.getAttribute('data-src')); });
+    $$('[data-img]').forEach(function (el) { el.setAttribute('src', 'img/' + el.getAttribute('data-img') + '-' + lang + '.webp'); });
     redraws.forEach(function (f) { f(); });
   }
   $('#lang').addEventListener('click', function () {
@@ -68,16 +71,24 @@
   // Only the app and the computer program can install. Elsewhere (an iPhone, or the "other" device) the TV can still be got ready,
   // and then the page says where to continue instead of looking for the TV.
   function canInstall() { return DEVICE === 'app' || DEVICE === 'local' || (DEVICE === 'computer' && state.via === 'pc'); }
+  var ready = false;   // false while the page is drawn the first time: no scrolling then
   function go(step, back) {
     if (step === 'find' && !canInstall()) { state.prepared = true; step = 'connector'; showGet(); }
     // With the app or the computer program already there, there is nothing to do on step 1: pass it, forwards or backwards.
     if (step === 'connector' && (DEVICE === 'app' || DEVICE === 'local' || (state.connected && state.via === 'pc'))) {
-      step = current === 'brand' ? 'start' : 'brand';
+      step = current === 'prepare' ? 'start' : 'prepare';
     }
     if (!back && step !== current) history.push(current);
     current = step;
     $$('.step').forEach(function (s) { s.hidden = s.getAttribute('data-step') !== step; });
-    window.scrollTo(0, 0);
+    var n = +($('.step[data-step="' + step + '"]').getAttribute('data-n') || 0);
+    $('#bar').hidden = !n;
+    $('#bar i').style.width = (step === 'progress' ? 100 : n * 25) + '%';
+    // On the web page the installer is in the middle of other sections: bring its top into view; in the app it is the whole page.
+    if (ready && !document.body.classList.contains('wizard-only')) {
+      var box = $('#install'), top = box.getBoundingClientRect().top + window.pageYOffset - 70;
+      window.scrollTo(0, Math.max(0, top));
+    } else if (ready) window.scrollTo(0, 0);
     var h = $('.step[data-step="' + step + '"] h1');
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
     if (step === 'find' && !state.scanned) scan();
@@ -97,6 +108,11 @@
   if (DEVICE === 'app' || DEVICE === 'local') {
     $('#via-box').hidden = true;
     $('#start-box').hidden = false;
+    // Already installing: just the installer, without the landing page around it.
+    document.body.classList.add('wizard-only');
+    $$('.site-only').forEach(function (e) { e.parentNode.removeChild(e); });
+    $('#wiz-h1').setAttribute('data-t', 'start.h1');
+    $('#wiz-lead').setAttribute('data-t', 'start.lead');
   } else if (DEVICE === 'ios') {
     $('#ov-note').setAttribute('data-t', 'via.note.ios');
   }
@@ -140,7 +156,7 @@
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () { prompt('', url); });
     else prompt('', url);
   });
-  $('#meanwhile').addEventListener('click', function () { go('brand'); });
+  $('#meanwhile').addEventListener('click', function () { go('prepare'); });
 
   /* ---------- 1. the computer program ---------- */
   function detectOs() {
@@ -208,7 +224,7 @@
   }
   function drawConnected() {
     var on = state.connected, c = $('#conn');
-    c.hidden = APP || DEVICE === 'local' || DEVICE !== 'computer' && !on;
+    c.hidden = APP || DEVICE === 'local' || !on;   // shown only while the program is open
     c.classList.toggle('on', on);
     $('#conn-text').textContent = T(on ? 'conn.on' : 'conn.off');
     $('#conn-wait').hidden = on;
@@ -227,7 +243,7 @@
       setConnected(info.app === 'freetv-conector', info);
       // The program was opened while on step 1: move on by itself.
       if (!was && state.connected && current === 'connector' && state.via === 'pc') {
-        setTimeout(function () { if (current === 'connector') go('brand'); }, 1200);
+        setTimeout(function () { if (current === 'connector') go('prepare'); }, 1200);
       }
     }).catch(function () { if (state.connected) setConnected(false); }).then(function () { polling = false; });
   }
@@ -399,7 +415,7 @@
 
   $('#pass').addEventListener('input', function () { this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); });
 
-  $('#install').addEventListener('click', function () {
+  $('#install-btn').addEventListener('click', function () {
     var msg = $('#details-msg');
     msg.hidden = true;
     var pass = $('#pass').value.trim();
@@ -490,4 +506,5 @@
   });
 
   applyLanguage();
+  ready = true;
 })();

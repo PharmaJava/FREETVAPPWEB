@@ -1,45 +1,125 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FreeTV para tu tele</title>
-<meta name="description" content="Pon FreeTV en tu tele LG sin saber programar: una pantalla de inicio limpia, sin anuncios.">
+<title>FreeTV: a clean, ad-free home screen for your TV</title>
+<meta name="description" content="Take the ads off your LG TV's home screen. FreeTV is free, open source and 100% reversible. Install it from a Windows PC or an Android phone.">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://pharmajava.github.io/FREETVAPPWEB/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="FreeTV: a clean, ad-free home screen for your TV">
+<meta property="og:description" content="Take the ads off your LG TV's home screen. Free, open source, no root, 100% reversible. Install it from a Windows PC or an Android phone.">
+<meta property="og:image" content="https://pharmajava.github.io/FREETVAPPWEB/img/og.jpg">
+<meta property="og:url" content="https://pharmajava.github.io/FREETVAPPWEB/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- Every text is in i18n.js (Spanish and English); data-t names it. The Spanish here is only what shows before the script runs. -->
+<!-- Every text is in i18n.js (Spanish and English); data-t names it. What is written here is only what shows before the script runs. -->
 <header class="top">
-  <div class="brand"><img src="icon.svg" alt="" width="32" height="32"> FreeTV</div>
+  <a class="brand" href="#top" aria-label="FreeTV"><img src="icon.svg" alt="" width="32" height="32"> FreeTV</a>
+  <nav class="nav site-only" aria-label="Sections">
+    <a href="#features" data-t="nav.features">Features</a>
+    <a href="#how" data-t="nav.how">How it works</a>
+    <a href="#tvs" data-t="nav.tvs">Compatible TVs</a>
+    <a href="#faq" data-t="nav.faq">FAQ</a>
+  </nav>
   <div class="top-right">
     <div id="conn" class="conn" hidden><span class="dot"></span><span id="conn-text"></span></div>
-    <button id="lang" class="lang" type="button" data-t="lang.switch" data-t-aria="lang.switch.aria">English</button>
+    <a class="cta small site-only" href="#install" data-t="nav.install">Install</a>
+    <button id="lang" class="lang" type="button" data-t="lang.switch" data-t-aria="lang.switch.aria">Español</button>
   </div>
 </header>
 
-<main id="app">
+<a id="top"></a>
 
-  <!-- 0. Bienvenida -->
+<!-- ============ Landing ============ -->
+<section class="hero site-only">
+  <div class="wrap hero-grid">
+    <div class="hero-text">
+      <p class="eyebrow" data-t="hero.eyebrow">Free · Open source · No root</p>
+      <h1 data-t="hero.h1">Take the ads off your TV's home screen</h1>
+      <p class="lead" data-t="hero.lead"></p>
+      <div class="cta-row">
+        <a class="big primary" href="#install" data-t="hero.cta">Install on my TV</a>
+        <a class="big" href="#how" data-t="hero.how">See how it works</a>
+      </div>
+      <ul class="badges">
+        <li data-t="hero.b1">LG webOS: works</li>
+        <li data-t="hero.b2">Samsung: experimental</li>
+        <li data-t="hero.b3">100% reversible</li>
+      </ul>
+    </div>
+    <figure class="hero-shot">
+      <img data-src="img/hero.webp" width="1600" height="900" alt="" data-t-alt="hero.alt">
+      <figcaption data-t="hero.cap"></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="features" class="band site-only">
+  <div class="wrap">
+    <h2 data-t="feat.h2">Everything your TV's home screen should have been</h2>
+    <div class="cards">
+      <article class="card"><span class="ico" aria-hidden="true">🚫</span><h3 data-t="feat.1.h"></h3><p data-t="feat.1.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">🔲</span><h3 data-t="feat.2.h"></h3><p data-t="feat.2.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">🎬</span><h3 data-t="feat.3.h"></h3><p data-t="feat.3.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">📺</span><h3 data-t="feat.4.h"></h3><p data-t="feat.4.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">🧸</span><h3 data-t="feat.5.h"></h3><p data-t="feat.5.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">🌤️</span><h3 data-t="feat.6.h"></h3><p data-t="feat.6.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">🧩</span><h3 data-t="feat.7.h"></h3><p data-t="feat.7.p"></p></article>
+      <article class="card"><span class="ico" aria-hidden="true">↩️</span><h3 data-t="feat.8.h"></h3><p data-t="feat.8.p"></p></article>
+    </div>
+  </div>
+</section>
+
+<section id="screens" class="wrap site-only">
+  <h2 data-t="shots.h2">See it</h2>
+  <p class="sub-lead" data-t="shots.lead"></p>
+  <div class="shots">
+    <figure><img loading="lazy" data-img="settings" width="1280" height="720" alt="" data-t-alt="shots.1.alt"><figcaption data-t="shots.1.cap"></figcaption></figure>
+    <figure><img loading="lazy" data-img="suggest" width="1280" height="720" alt="" data-t-alt="shots.2.alt"><figcaption data-t="shots.2.cap"></figcaption></figure>
+    <figure><img loading="lazy" data-img="shelf" width="1280" height="720" alt="" data-t-alt="shots.3.alt"><figcaption data-t="shots.3.cap"></figcaption></figure>
+    <figure><img loading="lazy" data-img="store" width="1280" height="720" alt="" data-t-alt="shots.4.alt"><figcaption data-t="shots.4.cap"></figcaption></figure>
+  </div>
+  <p class="small" data-t="shots.note"></p>
+</section>
+
+<section id="how" class="band site-only">
+  <div class="wrap">
+    <h2 data-t="how.h2">Installing it takes about 10 minutes</h2>
+    <ol class="big-steps">
+      <li><span class="num">1</span><h3 data-t="how.s1.h"></h3><p data-t="how.s1.p"></p></li>
+      <li><span class="num">2</span><h3 data-t="how.s2.h"></h3><p data-t="how.s2.p"></p></li>
+      <li><span class="num">3</span><h3 data-t="how.s3.h"></h3><p data-t="how.s3.p"></p></li>
+    </ol>
+    <p class="center"><a class="big primary" href="#install" data-t="hero.cta">Install on my TV</a></p>
+  </div>
+</section>
+
+<!-- ============ The installer ============ -->
+<section id="install" class="wrap">
+  <div class="install-head site-only">
+    <h2 data-t="install.h2">Install FreeTV</h2>
+    <p class="sub-lead" data-t="install.lead"></p>
+  </div>
+  <div class="bar" id="bar" hidden><i></i></div>
+  <main id="app">
+
+  <!-- 0. Start -->
   <section class="step" data-step="start">
-    <h1 data-t="start.h1">Una pantalla de inicio limpia para tu tele</h1>
-    <p class="lead" data-t="start.lead"></p>
+    <h1 id="wiz-h1" data-t="wiz.h1">Install FreeTV on your TV</h1>
+    <p class="lead" id="wiz-lead" data-t="wiz.lead"></p>
     <div id="via-box">
-      <h2 class="sub" data-t="via.q">¿Con qué lo vas a hacer?</h2>
+      <h2 class="sub" data-t="via.q">What will you use?</h2>
       <div class="choices">
-        <button class="choice" data-via="pc"><span class="logo pc">💻</span><span><span data-t="via.pc">Con un ordenador Windows</span>
+        <button class="choice" data-via="pc"><span class="logo pc">💻</span><span><span data-t="via.pc">A Windows computer</span>
           <small data-t="via.pc.small"></small></span></button>
-        <button class="choice" data-via="android"><span class="logo android">📱</span><span><span data-t="via.android">Con el móvil Android</span>
+        <button class="choice" data-via="android"><span class="logo android">📱</span><span><span data-t="via.android">An Android phone</span>
           <small data-t="via.android.small"></small></span></button>
       </div>
       <p class="note" id="ov-note" data-t="via.note"></p>
-      <h2 class="sub" data-t="how.title">Así se hace, paso a paso</h2>
-      <ol class="overview steps-how">
-        <li data-t="how.1"></li>
-        <li data-t="how.2"></li>
-        <li data-t="how.3"></li>
-        <li data-t="how.4"></li>
-      </ol>
     </div>
     <div id="start-box" hidden>
       <ol class="overview">
@@ -47,13 +127,13 @@
         <li data-t="start.ol2"></li>
       </ol>
       <p class="note" data-t="start.note"></p>
-      <button class="big primary" data-go="brand" data-t="start.go">Empezar</button>
+      <button class="big primary" data-go="prepare" data-t="start.go">Start</button>
     </div>
   </section>
 
-  <!-- 1. La app (Android), el programa (ordenador) o dónde abrir la web -->
-  <section class="step" data-step="connector" hidden>
-    <p class="crumb" data-t="crumb.1">Paso 1 de 5</p>
+  <!-- 1. The app (Android), the program (computer) or where to open the page -->
+  <section class="step" data-step="connector" data-n="1" hidden>
+    <p class="crumb" data-t="crumb.1">Step 1 of 4</p>
     <h1 id="get-title"></h1>
 
     <div id="get-android" hidden>
@@ -66,11 +146,11 @@
       <p class="lead" id="elsewhere-text"></p>
       <p class="address"><a id="elsewhere-address" href="#"></a></p>
       <div class="row inline">
-        <button class="big" id="share" type="button" hidden data-t="share">Compartir el enlace</button>
-        <button class="big" id="copy" type="button" data-t="copy">Copiar el enlace</button>
+        <button class="big" id="share" type="button" hidden data-t="share">Share the link</button>
+        <button class="big" id="copy" type="button" data-t="copy">Copy the link</button>
       </div>
       <p class="small" id="elsewhere-note"></p>
-      <h2 class="sub" data-t="how.title">Así se hace, paso a paso</h2>
+      <h2 class="sub" data-t="how.title">How it goes, step by step</h2>
       <ol class="overview steps-how">
         <li data-t="how.1"></li>
         <li data-t="how.2"></li>
@@ -78,7 +158,7 @@
         <li data-t="how.4"></li>
       </ol>
       <p data-t="meanwhile.text"></p>
-      <button class="big primary" id="meanwhile" type="button" data-t="meanwhile">Preparar la tele mientras tanto</button>
+      <button class="big primary" id="meanwhile" type="button" data-t="meanwhile">Get the TV ready meanwhile</button>
     </div>
 
     <div id="get-computer" hidden>
@@ -97,35 +177,33 @@
     </div>
 
     <div class="row">
-      <button class="link" data-go="start" data-t="back">← Volver</button>
-      <button class="big primary" id="to-find" data-go="brand" disabled hidden data-t="next">Seguir</button>
+      <button class="link" data-go="start" data-t="back">← Back</button>
+      <button class="big primary" id="to-find" data-go="prepare" disabled hidden data-t="next">Continue</button>
     </div>
   </section>
 
-  <!-- 2. Marca -->
+  <!-- Other brands -->
   <section class="step" data-step="brand" hidden>
-    <p class="crumb" data-t="crumb.2">Paso 2 de 5</p>
-    <h1 data-t="brand.h1">¿Qué tele tienes?</h1>
+    <h1 data-t="brand.h1">Which TV do you have?</h1>
     <p class="lead" data-t="brand.lead"></p>
     <div class="choices">
       <button class="choice" data-brand="lg"><span class="logo lg">LG</span><span>LG<small data-t="brand.lg"></small></span></button>
       <button class="choice" data-brand="samsung"><span class="logo samsung">S</span><span>Samsung<small data-t="brand.later"></small></span></button>
       <button class="choice" data-brand="android"><span class="logo android">▶</span><span>Android TV / Google TV<small data-t="brand.atv"></small></span></button>
     </div>
-    <button class="link" data-go="connector" data-t="back">← Volver</button>
+    <button class="link" data-go="prepare" data-t="back">← Back</button>
   </section>
 
-  <!-- 2b. Marcas sin instalación automática -->
   <section class="step" data-step="other" hidden>
     <h1 id="other-title"></h1>
     <div id="other-body"></div>
-    <button class="big" data-go="brand" data-t="other.back">← Elegir otra tele</button>
+    <button class="big" data-go="brand" data-t="other.back">← Choose another TV</button>
   </section>
 
-  <!-- 3. Preparar la tele (LG) -->
-  <section class="step" data-step="prepare" hidden>
-    <p class="crumb" data-t="crumb.3">Paso 3 de 5</p>
-    <h1 data-t="prep.h1">Prepara la tele</h1>
+  <!-- 2. Get the TV ready (LG) -->
+  <section class="step" data-step="prepare" data-n="2" hidden>
+    <p class="crumb" data-t="crumb.2">Step 2 of 4</p>
+    <h1 data-t="prep.h1">Get the TV ready</h1>
     <p class="lead" data-t="prep.lead"></p>
     <ol class="checklist">
       <li><label><input type="checkbox"> <span data-t="prep.1"></span></label></li>
@@ -141,16 +219,17 @@
       <div class="tv-row"><span>Passphrase</span><code>A1B2C3</code></div>
       <div class="tv-cap" data-t="prep.cap"></div>
     </div>
+    <p class="small"><button class="link" data-go="brand" data-t="prep.other">Not an LG TV?</button></p>
     <div class="row">
-      <button class="link" data-go="brand" data-t="back">← Volver</button>
-      <button class="big primary" data-go="find" data-t="prep.next">Ya está, seguir</button>
+      <button class="link" data-go="connector" data-t="back">← Back</button>
+      <button class="big primary" data-go="find" data-t="prep.next">Done, continue</button>
     </div>
   </section>
 
-  <!-- 4. Buscar la tele -->
-  <section class="step" data-step="find" hidden>
-    <p class="crumb" data-t="crumb.4">Paso 4 de 5</p>
-    <h1 data-t="find.h1">¿Cuál es tu tele?</h1>
+  <!-- 3. Find the TV -->
+  <section class="step" data-step="find" data-n="3" hidden>
+    <p class="crumb" data-t="crumb.3">Step 3 of 4</p>
+    <h1 data-t="find.h1">Which one is your TV?</h1>
     <div id="scan-status" class="status wait"></div>
     <div id="tv-list" class="tv-list"></div>
     <details id="manual" class="manual">
@@ -158,20 +237,20 @@
       <p class="small" data-t="find.manual.help"></p>
       <div class="row inline">
         <input id="ip" inputmode="decimal" placeholder="192.168.1.140" autocomplete="off" data-t-aria="find.ip.aria">
-        <button id="check-ip" class="big" data-t="find.use">Usar esta IP</button>
+        <button id="check-ip" class="big" data-t="find.use">Use this IP</button>
       </div>
       <p id="ip-msg" class="small"></p>
     </details>
     <div class="row">
-      <button class="link" data-go="prepare" data-t="back">← Volver</button>
-      <button class="link" id="rescan" data-t="find.rescan">Buscar otra vez</button>
+      <button class="link" data-go="prepare" data-t="back">← Back</button>
+      <button class="link" id="rescan" data-t="find.rescan">Search again</button>
     </div>
   </section>
 
-  <!-- 5. Datos -->
-  <section class="step" data-step="details" hidden>
-    <p class="crumb" data-t="crumb.5">Paso 5 de 5</p>
-    <h1 data-t="details.h1">Último paso</h1>
+  <!-- 4. Details -->
+  <section class="step" data-step="details" data-n="4" hidden>
+    <p class="crumb" data-t="crumb.4">Step 4 of 4</p>
+    <h1 data-t="details.h1">Last step</h1>
     <p class="lead" id="chosen-tv"></p>
 
     <label class="field">
@@ -179,6 +258,15 @@
       <span class="help" data-t="pass.help"></span>
       <input id="pass" class="code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="A1B2C3">
     </label>
+    <details class="small where">
+      <summary data-t="pass.where"></summary>
+      <div class="tv-mock" aria-hidden="true">
+        <div class="tv-row"><span>Dev Mode Status</span><b>ON</b></div>
+        <div class="tv-row"><span>Key Server</span><b>ON</b></div>
+        <div class="tv-row"><span>IP</span><code>192.168.1.140</code></div>
+        <div class="tv-row hl"><span>Passphrase</span><code>A1B2C3</code></div>
+      </div>
+    </details>
 
     <label class="field">
       <span class="label" data-t="city.label"></span>
@@ -208,13 +296,13 @@
 
     <p id="details-msg" class="error" hidden></p>
     <div class="row">
-      <button class="link" data-go="find" data-t="back">← Volver</button>
-      <button class="big primary" id="install" data-t="install">Instalar FreeTV</button>
+      <button class="link" data-go="find" data-t="back">← Back</button>
+      <button class="big primary" id="install-btn" data-t="install">Install FreeTV</button>
     </div>
   </section>
 
-  <!-- 6. Instalando -->
-  <section class="step" data-step="progress" hidden>
+  <!-- Installing -->
+  <section class="step" data-step="progress" data-n="4" hidden>
     <h1 id="progress-title"></h1>
     <div id="prompt" class="prompt" hidden>
       <div class="prompt-icon">📺</div>
@@ -228,17 +316,47 @@
     <div id="failed" hidden>
       <div class="status bad"><span>✗</span> <span id="fail-msg"></span></div>
       <div class="row">
-        <button class="big primary" id="retry" data-t="progress.retry">Volver a intentarlo</button>
+        <button class="big primary" id="retry" data-t="progress.retry">Try again</button>
       </div>
     </div>
     <details class="small"><summary data-t="progress.details"></summary><pre id="log" class="log"></pre></details>
   </section>
-</main>
+  </main>
+</section>
+
+<!-- ============ Which TVs ============ -->
+<section id="tvs" class="band site-only">
+  <div class="wrap">
+    <h2 data-t="tvs.h2">Which TVs does it work on?</h2>
+    <div class="cards three">
+      <article class="card tv-card"><span class="logo lg">LG</span><h3 data-t="tvs.lg.h"></h3><p class="tag ok" data-t="tvs.lg.tag"></p><p data-t="tvs.lg.p"></p></article>
+      <article class="card tv-card"><span class="logo samsung">S</span><h3 data-t="tvs.sa.h"></h3><p class="tag" data-t="tvs.sa.tag"></p><p data-t="tvs.sa.p"></p></article>
+      <article class="card tv-card"><span class="logo android">▶</span><h3 data-t="tvs.an.h"></h3><p class="tag" data-t="tvs.an.tag"></p><p data-t="tvs.an.p"></p></article>
+    </div>
+    <p class="small center" data-t="tvs.note"></p>
+  </div>
+</section>
+
+<section id="faq" class="wrap site-only">
+  <h2 data-t="faq.h2">Questions</h2>
+  <div class="faq">
+    <details><summary data-t="faq.1.q"></summary><p data-t="faq.1.a"></p></details>
+    <details><summary data-t="faq.2.q"></summary><p data-t="faq.2.a"></p></details>
+    <details><summary data-t="faq.3.q"></summary><p data-t="faq.3.a"></p></details>
+    <details><summary data-t="faq.4.q"></summary><p data-t="faq.4.a"></p></details>
+    <details><summary data-t="faq.5.q"></summary><p data-t="faq.5.a"></p></details>
+    <details><summary data-t="faq.6.q"></summary><p data-t="faq.6.a"></p></details>
+    <details><summary data-t="faq.7.q"></summary><p data-t="faq.7.a"></p></details>
+    <details><summary data-t="faq.8.q"></summary><p data-t="faq.8.a"></p></details>
+    <details><summary data-t="faq.9.q"></summary><p data-t="faq.9.a"></p></details>
+  </div>
+</section>
 
 <footer class="foot">
-  <p data-t="footer"></p>
+  <div class="wrap"><p data-t="footer"></p></div>
 </footer>
 <script src="i18n.js"></script>
+<script src="landing.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

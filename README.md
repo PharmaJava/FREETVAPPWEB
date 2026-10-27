@@ -1,6 +1,173 @@
+# FreeTV for your TV (web installer)
+
+**Website: https://pharmajava.github.io/FREETVAPPWEB/**
+
+[![FreeTV on an LG OLED TV](img/og.jpg)](https://pharmajava.github.io/FREETVAPPWEB/)
+
+A web page so that anyone, without knowing anything about computers, can put [FreeTV](https://github.com/PharmaJava/FreeTV) on their
+LG TV: a clean, ad-free home screen, free and open source. The page and the app are in **English and Spanish** (it picks the language
+of the browser or the phone, and has a button to change it). [Versión en español ↓](#freetv-para-tu-tele-instalador-web)
+
+You give someone the address and they choose how to do it:
+
+- **With a Windows computer** (there is a Mac version too): they download `FreeTV-Windows.exe`, open it and it guides them in the
+  browser to the end.
+- **With an Android phone**: they download the FreeTV app and do everything from the phone.
+
+Either way: they get the TV ready by following a checklist, pick their TV from a list, type the code shown on the TV and press
+**Install**. No terminal, nothing else to install.
+
+## What the page has
+
+A landing page, then the installer:
+
+- **Landing:** what FreeTV is (with a real photo from an LG OLED), eight features, four screens from the app itself, how it works in
+  three steps, which TVs it works on and an FAQ. Everything is in `index.html` with its texts in `landing.js` (and the installer's in
+  `i18n.js`), in both languages.
+- **Installer:** four steps with a progress bar: *1 get the program or the app* (skipped when it is already open) → *2 get the TV
+  ready* → *3 find your TV* → *4 passphrase, city and services → Install*. The question "which brand?" is no longer in the way: only a
+  link in step 2 ("Not an LG TV?").
+- Opened from the computer program or from the Android app, the page shows **only the installer** (no landing page around it).
+- If the page is opened on a device that cannot install (an iPhone, or the "other" device you chose), it says where to open it, with
+  buttons to share or copy the link, and lets you **get the TV ready meanwhile**.
+
+## How it works
+
+A web page, for security, **cannot** talk to the TV (not to find it, not to open the SSH connection LG requires to install). So the page
+is the front door and what talks to the TV is a program on the same device:
+
+```
+ Windows computer:  page ─▶ "Download FreeTV for Windows" ─▶ FreeTV-Windows.exe (127.0.0.1:47321) ───────────────▶ LG TV
+ Android phone:     page ─▶ "Download the app" ─▶ FreeTV app (the same page inside + the installer) ──────────────▶ LG TV
+ iPhone:            the page explains an Android phone or a computer is needed (Apple only allows apps from its App Store)
+```
+
+1. **The page** (`index.html`, `i18n.js`, `landing.js`, `app.js`, `style.css` and `img/` in the root, which is what GitHub Pages
+   serves).
+2. **The computer program** (`connector/`, in Node, packed as a single `.exe`): when opened it starts a small server for that computer
+   only (`127.0.0.1:47321`). The GitHub page talks to it there; if the browser does not allow it, the program opens the same page
+   itself. On Windows it has its own name, icon and version, and if something fails the window does not close by itself: it waits for
+   Enter, with the message in Spanish and English.
+3. **The Android app** (`android/`): shows **the same page** (inside the app) and, underneath, the installer (`android/core`, Java),
+   which the page calls through a JavaScript bridge (`window.FreeTVAndroid`) with the same API as the computer program.
+
+Both installers do what FreeTV's `install.sh` does:
+- **find TVs** on the Wi-Fi (SSDP and the ports LG, Samsung and Android TVs open) and say whether Developer Mode and the Key Server are on,
+- ask the TV's **Key Server** for the key and unlock it with the *passphrase* (in memory only),
+- read the TV's apps (the TV shows a message: **Accept** with the remote),
+- put your settings and your apps in FreeTV's package, install the Home button helper and FreeTV, and configure them,
+- only if ticked: the app store from the TV itself (like `install.sh`'s last question).
+
+The installers explain problems in Spanish; the page has its own text for each known problem (by its code: `passphrase`,
+`keyserver`, `pairing`…) in both languages. The installation steps are translated too. Only the technical "details" of the
+installation stay in Spanish.
+
+### Which TVs
+
+| TV | On this site |
+|---|---|
+| **LG (webOS)** | Full automatic install |
+| Samsung (Tizen) | Detected, but not automatic: FreeTV needs a Samsung certificate from your account. Link to the guide. The page says that, with TizenBrew on the TV, FreeTV brings YouTube AdFree, Twitch AdFree and a community app store |
+| Android TV / Google TV | Detected, but not automatic: the app has to be built. Link to Free My TV and to the guide |
+
+### Security and privacy
+
+- The *passphrase* goes from the browser to the program (or from the page to the app, inside the phone) and from there to the TV. It is
+  not stored anywhere.
+- The computer program only listens on `127.0.0.1` (not on the network), only accepts requests from this page (`Origin` header
+  checked, JSON only, `Host` checked against *DNS rebinding*) and only installs on LG TVs with the right *passphrase*.
+- Nothing goes through any server of ours: there is none. The page only asks, besides, Open-Meteo's city search.
+- Non-secret settings (city, services, language) are remembered in the browser for next time. The TMDB key and the *passphrase* are not.
+
+## For whoever maintains this
+
+### The page and the downloads
+
+- **Page:** GitHub Pages serves the root of `main` (Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`), at
+  https://pharmajava.github.io/FREETVAPPWEB/. `.nojekyll` makes it be served as it is.
+- **Downloads:** the **Build and publish** workflow (`.github/workflows/build.yml`) runs on every *push* to `main`, by hand, and **every
+  6 hours**:
+  - on the 6-hourly run, a first job looks at FreeTV's latest commit and **only builds if it differs** from the one the downloads on the
+    release were built from (`freetv-version.txt` on the release). That is how a change in FreeTV reaches the downloads by itself.
+    (GitHub pauses scheduled runs of a repository with no activity for 60 days: any push or a manual run starts them again.)
+  - it builds FreeTV's packages from `PharmaJava/FreeTV` (branch in `FREETV_REF`),
+  - tests the install against a pretend TV,
+  - builds the Android app and the program for Windows, Mac and Linux, and checks the program **really starts on Windows, Mac and
+    Linux**,
+  - uploads them to the **`descargas`** release, which is the one the page links to: `FreeTV-Windows.exe`, `FreeTV-Android.apk`,
+    `FreeTV-Mac-AppleSilicon.zip`, `FreeTV-Mac-Intel.zip` and `FreeTV-Linux`. Files of earlier builds that are no longer made are deleted.
+  - The run's summary says which FreeTV commit the downloads carry.
+- To pick up a new FreeTV right now without changing anything here: **Actions → Build and publish → Run workflow**.
+- To change a text: `landing.js` (the landing page) or `i18n.js` (the installer), in both languages (same keys).
+- To change the pictures: see `tools/screenshots.js`.
+
+### The Android app
+
+- It is installed outside Google Play (the APK from the page): Android asks for permission to install apps from that source and Play
+  Protect warns. The page explains what to tap.
+- Updates must be signed with the same key. The key is in `android/app/freetv-release.keystore` (password `freetv-android`), in plain
+  sight: handy for a family app, but whoever copies it could sign an app that pretends to be this one. To use your own secret key, keep
+  it in GitHub secrets and pass it in the variables `FREETV_KEYSTORE`, `FREETV_KEYSTORE_PASSWORD`, `FREETV_KEY_ALIAS` and
+  `FREETV_KEY_PASSWORD` (`android/app/build.gradle`). Changing the key means uninstalling the app before installing the new one.
+
+### Locally
+
+```bash
+cd connector
+npm ci
+bash scripts/build-bundle.sh ../../FreeTV   # builds FreeTV's packages (needs git, python3, node 20+)
+npm test                                    # the whole install against a pretend TV (test/fake-tv.js)
+npm start                                   # the program, with the page at http://127.0.0.1:47321
+node scripts/build-exe.js                   # this system's executable, in dist/ (on Windows: FreeTV-Windows.exe, with icon)
+cd ../android
+gradle :core:test                           # the app's installer, against the same pretend TV (needs Node)
+gradle :app:assembleRelease                 # the APK (needs the Android SDK)
+```
+
+### Structure
+
+| Path | What |
+|---|---|
+| `index.html`, `style.css`, `app.js`, `icon.svg` | The page (GitHub Pages, the Android app and the program use the same one) |
+| `i18n.js` | The installer's texts, in Spanish and English |
+| `landing.js` | The landing page's texts, in Spanish and English |
+| `img/` | The pictures: `hero.webp` (an LG OLED), `og.jpg` (social cards) and the app's screens `<name>-<en\|es>.webp` |
+| `tools/` | `screenshots.js` (makes the app's screens) and `fake-tizenbrew.js` (a pretend TizenBrew for them) |
+| `connector/src/main.js` | The computer program: API (`/api/hello`, `/api/scan`, `/api/check`, `/api/install`, `/api/job/<id>`) and the page |
+| `connector/src/scan.js` | Finding TVs (SSDP and ports) |
+| `connector/src/lg.js` | The LG install, step by step |
+| `connector/src/ssh.js`, `ssap.js`, `ipk.js` | Developer Mode key and SSH, the TV's remote control service, and rewriting the `.ipk` package |
+| `connector/scripts/` | `build-bundle.sh` (FreeTV's packages) and `build-exe.js` (executable; on Windows it sets name, icon and version) |
+| `connector/assets/freetv.ico` | The Windows `.exe`'s icon |
+| `connector/test/` | Pretend LG TV and tests |
+| `android/core/` | The Android app's installer (Java): `Scanner`, `Ssh`, `Ssap` (with `WebSocketClient`), `Ipk`, `Installer`, `Api` |
+| `android/app/` | The app: `MainActivity` shows the page and gives it the bridge to the installer |
+
+## Known limits
+
+- **Tested against a pretend TV**, with FreeTV's real packages (the program and the app); **not yet on a real LG**, nor the app on a
+  real phone. The steps are `ares-install`'s and FreeTV's installer's, but try it on a TV before handing it to the family. That the
+  program starts on Windows and Mac *is* checked on every build.
+- **iPhone cannot install:** Apple only allows apps from the App Store (a paid developer account and its review). From an iPhone the
+  page explains the steps, lets you get the TV ready and sends you to open it on a computer or an Android phone.
+- The program is **not signed** (signing costs money): Windows shows "Windows protected your PC" (→ *More info → Run anyway*) and the
+  Mac asks to open it with a right click or from *Privacy & Security*. The page explains it.
+- The YouTube channel shortcuts in the *Custom* tab come **without cover pictures** (they are other people's logos and the packages
+  are published here). They work the same.
+- The screens on the page come from the app running in a browser (with a pretend Samsung TV), not from a real TV; the hero photo is
+  from an LG OLED.
+- Samsung and Android TVs: only detected, and the page explains what to do.
+
+## Credits
+
+[FreeTV](https://github.com/PharmaJava/FreeTV) (MIT), which uses [Free My TV](https://freemytv.io) and the helper from
+[Razdva122/clean-your-tv-lg-webos](https://github.com/Razdva122/clean-your-tv-lg-webos) (MIT). Not affiliated with LG or Samsung.
+
+---
+
 # FreeTV para tu tele (instalador web)
 
-**Web: https://pharmajava.github.io/FREETVAPPWEB/**
+**Web: https://pharmajava.github.io/FREETVAPPWEB/** · [English ↑](#freetv-for-your-tv-web-installer)
 
 Una página web para que cualquiera, sin saber nada de ordenadores, ponga [FreeTV](https://github.com/PharmaJava/FreeTV) en su tele LG.
 En **español y en inglés** (la web elige sola según el idioma del navegador o del móvil, y tiene un botón para cambiarlo).
@@ -14,8 +181,19 @@ Le das la dirección de la web y eligen cómo hacerlo:
 En los dos casos: eligen su tele, la preparan siguiendo la lista, escriben el código que sale en la tele y pulsan **Instalar**. Sin
 terminal ni nada más que instalar.
 
-*English: a web page to put FreeTV on an LG TV without knowing anything about computers, from a Windows computer or an Android phone. The
-page and the app are in Spanish and English.*
+## Qué tiene la página
+
+Una página de presentación y, después, el instalador:
+
+- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), ocho ventajas, cuatro pantallas de la propia app, cómo funciona
+  en tres pasos, en qué teles funciona y unas preguntas frecuentes. Todo está en `index.html`, con sus textos en `landing.js` (y los
+  del instalador en `i18n.js`), en los dos idiomas.
+- **Instalador:** cuatro pasos con barra de progreso: *1 conseguir el programa o la app* (se salta si ya está abierto) → *2 preparar
+  la tele* → *3 encontrar tu tele* → *4 passphrase, ciudad y servicios → Instalar*. La pregunta «¿qué marca?» ya no estorba: solo hay
+  un enlace en el paso 2 («¿No es una LG?»).
+- Abierta desde el programa del ordenador o desde la app de Android, la página enseña **solo el instalador** (sin la presentación).
+- Si la página se abre en un aparato que no puede instalar (un iPhone, o el «otro» aparato que elegiste), dice dónde abrirla, con
+  botones para compartir o copiar el enlace, y deja **preparar la tele mientras tanto**.
 
 ## Cómo funciona
 
@@ -28,7 +206,7 @@ eso la web es la puerta de entrada y quien habla con la tele es un programa en e
  iPhone:             la web explica que hace falta un Android o un ordenador (Apple solo deja instalar desde la App Store)
 ```
 
-1. **La web** (`index.html`, `i18n.js`, `app.js`, `style.css` en la raíz, que es lo que sirve GitHub Pages). La portada pregunta
+1. **La web** (`index.html`, `i18n.js`, `landing.js`, `app.js`, `style.css` e `img/` en la raíz, que es lo que sirve GitHub Pages). La portada pregunta
    «¿Con qué lo vas a hacer?» (ordenador Windows o móvil Android) y explica el camino entero, paso a paso. Luego da la descarga que
    toca. Si se elige un aparato distinto del que se está usando (o se entra desde un iPhone), dice en qué aparato abrir la web, con
    botones para compartir o copiar el enlace (en el móvil abre el menú de compartir: WhatsApp…), repite los pasos y deja **preparar
@@ -75,7 +253,12 @@ Los instaladores explican los problemas en español; la web tiene su propio text
 
 - **Web:** GitHub Pages sirve la raíz de `main` (Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`), en
   https://pharmajava.github.io/FREETVAPPWEB/. `.nojekyll` hace que se sirva tal cual.
-- **Descargas:** en cada *push* a `main`, el flujo **Build and publish** (`.github/workflows/build.yml`):
+- **Descargas:** el flujo **Build and publish** (`.github/workflows/build.yml`) se ejecuta en cada *push* a `main`, a mano y **cada
+  6 horas**:
+  - en la ejecución de cada 6 horas, un primer trabajo mira el último commit de FreeTV y **solo compila si es distinto** del que
+    llevan las descargas de la *release* (`freetv-version.txt` en la *release*). Así un cambio en FreeTV llega solo a las descargas.
+    (GitHub pausa las ejecuciones programadas de un repositorio sin actividad durante 60 días: cualquier *push* o una ejecución a mano
+    las vuelve a poner en marcha.)
   - compila los paquetes de FreeTV desde `PharmaJava/FreeTV` (rama en `FREETV_REF`),
   - prueba la instalación contra una tele simulada,
   - compila la app de Android y el programa para Windows, Mac y Linux, y comprueba que el programa **arranca de verdad en Windows, Mac
@@ -83,8 +266,10 @@ Los instaladores explican los problemas en español; la web tiene su propio text
   - los sube a la *release* **`descargas`**, que es la que enlaza la web: `FreeTV-Windows.exe`, `FreeTV-Android.apk`,
     `FreeTV-Mac-AppleSilicon.zip`, `FreeTV-Mac-Intel.zip` y `FreeTV-Linux`. Los archivos de versiones anteriores que ya no se hacen
     se borran.
-- Para meter una versión nueva de FreeTV sin cambiar nada aquí: **Actions → Build and publish → Run workflow**.
-- Para cambiar un texto: `i18n.js`, en los dos idiomas (mismas claves).
+  - El resumen de la ejecución dice qué commit de FreeTV llevan las descargas.
+- Para meter una versión nueva de FreeTV ahora mismo sin cambiar nada aquí: **Actions → Build and publish → Run workflow**.
+- Para cambiar un texto: `landing.js` (la presentación) o `i18n.js` (el instalador), en los dos idiomas (mismas claves).
+- Para cambiar las imágenes: mira `tools/screenshots.js`.
 
 ### La app de Android
 
@@ -114,7 +299,11 @@ gradle :app:assembleRelease                 # el APK (necesita el SDK de Android
 
 | Ruta | Qué |
 |---|---|
-| `index.html`, `i18n.js`, `app.js`, `style.css`, `icon.svg` | La web (GitHub Pages, la app de Android y el programa usan la misma). `i18n.js`: los textos en español e inglés |
+| `index.html`, `style.css`, `app.js`, `icon.svg` | La web (GitHub Pages, la app de Android y el programa usan la misma) |
+| `i18n.js` | Los textos del instalador, en español e inglés |
+| `landing.js` | Los textos de la presentación, en español e inglés |
+| `img/` | Las imágenes: `hero.webp` (una LG OLED), `og.jpg` (tarjetas de redes sociales) y las pantallas de la app `<nombre>-<en\|es>.webp` |
+| `tools/` | `screenshots.js` (hace las pantallas de la app) y `fake-tizenbrew.js` (un TizenBrew de mentira para ellas) |
 | `connector/src/main.js` | El programa del ordenador: API (`/api/hello`, `/api/scan`, `/api/check`, `/api/install`, `/api/job/<id>`) y la web |
 | `connector/src/scan.js` | Búsqueda de teles (SSDP y puertos) |
 | `connector/src/lg.js` | La instalación en LG, paso a paso |
@@ -136,9 +325,11 @@ gradle :app:assembleRelease                 # el APK (necesita el SDK de Android
   todas formas*) y el Mac pide abrirlo con clic derecho o desde *Privacidad y seguridad*. La web lo explica.
 - Los accesos directos a canales de YouTube de la pestaña *Personalizado* van **sin foto de portada** (son logos de otros y aquí se
   publican los paquetes). Funcionan igual.
+- Las pantallas de la página salen de la app funcionando en un navegador (con una Samsung de mentira), no de una tele real; la foto
+  de portada es de una LG OLED.
 - Teles Samsung y Android TV: solo se detectan y se explica qué hacer.
 
 ## Créditos
 
 [FreeTV](https://github.com/PharmaJava/FreeTV) (MIT), que usa [Free My TV](https://freemytv.io) y el ayudante de
-[Razdva122/clean-your-tv-lg-webos](https://github.com/Razdva122/clean-your-tv-lg-webos) (MIT). No afiliado a LG.
+[Razdva122/clean-your-tv-lg-webos](https://github.com/Razdva122/clean-your-tv-lg-webos) (MIT). No afiliado a LG ni a Samsung.

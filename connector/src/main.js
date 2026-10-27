@@ -24,7 +24,7 @@ const ORIGINS = new Set([SITE_ORIGIN, HOME, 'http://localhost:' + PORT].concat((
 let sea = null;
 try { sea = require('node:sea'); if (!sea.isSea()) sea = null; } catch (e) { sea = null; }
 // The web page's files (at the repository's root, where GitHub Pages serves them).
-const SITE_FILES = ['index.html', 'i18n.js', 'app.js', 'style.css', 'icon.svg'];
+const SITE_FILES = ['index.html', 'i18n.js', 'landing.js', 'app.js', 'style.css', 'icon.svg'];
 function asset(name) {
   if (name.startsWith('site/') && !SITE_FILES.includes(name.slice(5))) return null;
   if (sea) { try { return Buffer.from(sea.getAsset(name)); } catch (e) { return null; } }
