@@ -63,8 +63,10 @@ if (!author) {
   const caCert = toPem(pick(/developer\/tizen-developer-ca\.cer$/));
   const caKey = path.join(tmp, 'ca.key'), caCrt = path.join(tmp, 'ca.crt'), key = path.join(tmp, 'a.key'), csr = path.join(tmp, 'a.csr');
   const crt = path.join(tmp, 'a.crt'), ext = path.join(tmp, 'ext.cnf');
-  execFileSync('openssl', ['rsa', '-in', '-', '-passin', 'pass:tizencertificatefordevelopercaroqkfwk', '-out', caKey],
-    { input: pick(/developer\/tizen-developer-ca-privatekey\.pem$/), stdio: ['pipe', 'ignore', 'inherit'] });
+  const caKeyEnc = path.join(tmp, 'ca-enc.key');
+  fs.writeFileSync(caKeyEnc, pick(/developer\/tizen-developer-ca-privatekey\.pem$/));
+  execFileSync('openssl', ['rsa', '-in', caKeyEnc, '-passin', 'pass:tizencertificatefordevelopercaroqkfwk', '-out', caKey],
+    { stdio: ['ignore', 'ignore', 'inherit'] });
   fs.writeFileSync(caCrt, caCert);
   execFileSync('openssl', ['genrsa', '-out', key, '2048'], { stdio: 'ignore' });
   execFileSync('openssl', ['req', '-new', '-key', key, '-subj', '/CN=FreeTV/O=FreeTV/OU=FreeTV', '-out', csr]);
