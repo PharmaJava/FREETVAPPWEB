@@ -28,7 +28,8 @@ const pick = (re) => { const f = files.find((x) => re.test(x.name)); if (!f) thr
 const maybe = (re) => { const f = files.find((x) => re.test(x.name)); return f ? f.data : null; };
 const b64 = (pem) => String(pem).replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
 const pemCerts = (text) => String(text).match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) || [];
-const toPem = (data) => (/BEGIN CERTIFICATE/.test(data.toString('latin1')) ? data.toString('latin1')
+// One certificate in PEM: the first one of the file (Tizen's .cer files can hold more than one, or text around it), or a DER file.
+const toPem = (data) => (/BEGIN CERTIFICATE/.test(data.toString('latin1')) ? pemCerts(data.toString('latin1'))[0] + '\n'
   : execFileSync('openssl', ['x509', '-inform', 'DER', '-outform', 'PEM'], { input: data }).toString());
 
 function fromP12(p12, password, caData) {
