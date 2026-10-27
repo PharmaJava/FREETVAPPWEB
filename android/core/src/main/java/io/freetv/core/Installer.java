@@ -129,7 +129,8 @@ public final class Installer {
         ssh.exec("/usr/bin/test -d " + TEMP + " || /bin/mkdir -p " + TEMP);
         job.say("Enviando " + name + " (" + Math.round(data.length / 1024.0) + " KB)…");
         ssh.put(file, data, "644");
-        String payload = new JSONObject().put("id", "com.ares.defaultName").put("ipkUrl", file).put("subscribe", true).toString();
+        String payload = new JSONObject().put("id", "com.ares.defaultName").put("ipkUrl", file).put("subscribe", true).toString()
+                .replace("\\/", "/");   // Android's JSON writes "/" as "\/", and a backslash cannot go inside the quotes
         final String[] result = {"", ""};   // state, failure
         final StringBuilder lines = new StringBuilder();
         ssh.exec("/usr/bin/luna-send-pub -i luna://com.webos.appInstallService/dev/install " + Ssh.q(payload), null, text -> {
