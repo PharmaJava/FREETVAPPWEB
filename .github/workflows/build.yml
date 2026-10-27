@@ -60,10 +60,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: FreeTV's Samsung author certificate from earlier builds
+        # Samsung TVs of 2017-2022 only update an app signed with the same author certificate: it is made once and kept on the
+        # "datos-compilacion" release (a pre-release the web page does not link to).
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p build-data
+          gh release download datos-compilacion --repo "$GITHUB_REPOSITORY" -p tizen-author.json -D build-data || echo "none yet: one is made now"
       - name: Build FreeTV's packages
+        env:
+          TIZEN_AUTHOR: ${{ github.workspace }}/build-data/tizen-author.json
         run: |
           bash connector/scripts/build-bundle.sh "$GITHUB_WORKSPACE/freetv"
           echo "FreeTV commit in these downloads: $(git -C freetv log -1 --format='%h %s')" | tee -a "$GITHUB_STEP_SUMMARY"
+          test -f connector/bundle/samsung/certs.json && echo "Samsung: FreeTV.wgt and its certificates are in" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Samsung's certificate service answers (for 2023+ TVs)
+        continue-on-error: true
+        run: |
+          curl -sS -o /dev/null -w 'svdca.samsungqbe.com: HTTP %{http_code}, TLS verify %{ssl_verify_result}\n' https://svdca.samsungqbe.com/apis/v3/authors | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Test the install against a pretend TV
         working-directory: connector
         run: npm ci --no-audit --no-fund && npm test
@@ -71,6 +86,11 @@ jobs:
         with:
           name: bundle
           path: connector/bundle/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-data
+          path: build-data/
+          if-no-files-found: ignore
 
   android:
     needs: bundle
@@ -230,6 +250,21 @@ jobs:
         with:
           name: bundle
           path: bundle
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: build-data
+          path: build-data
+      - name: Keep FreeTV's Samsung author certificate for the next builds
+        if: hashFiles('build-data/tizen-author.json') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view datos-compilacion >/dev/null 2>&1; then
+            gh release create datos-compilacion --prerelease --title "Datos de compilación" \
+              --notes "Lo que la compilación guarda entre una vez y otra (el certificado de autor de FreeTV para Samsung). No es una descarga."
+          fi
+          gh release upload datos-compilacion build-data/tizen-author.json --clobber
       - name: Note which FreeTV these downloads carry
         run: python3 -c "import json; print(json.load(open('bundle/bundle.json'))['freetv'])" > downloads/freetv-version.txt
       - name: Put the downloads on the "descargas" release

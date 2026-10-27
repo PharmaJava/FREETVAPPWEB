@@ -13,6 +13,8 @@ const path = require('path');
 const { execFile } = require('child_process');
 const scan = require('./scan');
 const lg = require('./lg');
+const samsung = require('./samsung');
+const samsungCert = require('./samsung-cert');
 
 const VERSION = '1.0.0';
 const PORT = Number(process.env.FREETV_PORT) || 47321;
@@ -38,7 +40,11 @@ function loadBundle() {
   const launcher = asset('bundle/launcher.ipk');
   const native = asset('bundle/nativehome.ipk');
   if (!info || !launcher || !native) return null;
-  return { info: JSON.parse(info.toString('utf8')), launcher, native };
+  // FreeTV for Samsung (the .wgt, not signed yet) and the certificates to sign it: optional, LG works without them.
+  const wgt = asset('bundle/samsung/FreeTV.wgt');
+  const certs = asset('bundle/samsung/certs.json');
+  const sam = wgt && certs ? Object.assign({ wgt }, JSON.parse(certs.toString('utf8'))) : null;
+  return { info: JSON.parse(info.toString('utf8')), launcher, native, samsung: sam };
 }
 const bundle = loadBundle();
 
@@ -76,12 +82,19 @@ function serveSite(req, res) {
   res.end(data);
 }
 
+function report(job) {
+  console.log(job.state === 'done'
+    ? '  ✓ ¡Hecho! Ya puedes cerrar esta ventana. / Done! You can close this window now.'
+    : '  ✗ No se pudo terminar / It could not finish: ' + (job.error ? job.error.message : '') + '\n    (Puedes volver a intentarlo desde el navegador. / You can try again from the browser.)');
+}
+
 async function api(req, res, origin) {
   const route = req.method + ' ' + new URL(req.url, HOME).pathname;
   if (route === 'GET /api/hello') {
     if (origin === SITE_ORIGIN || (origin && origin !== HOME && ORIGINS.has(origin))) sitePinged = Date.now();
     return send(res, 200, { app: 'freetv-conector', version: VERSION, ready: !!bundle,
-      freetv: bundle && bundle.info.freetv, launcher: bundle && bundle.info.launcher, busy: !!running }, origin);
+      freetv: bundle && bundle.info.freetv, launcher: bundle && bundle.info.launcher, busy: !!running,
+      samsung: !!(bundle && bundle.samsung), addresses: scan.networks().map((n) => n.address) }, origin);
   }
   if (req.method === 'POST' && !/^application\/json\b/.test(req.headers['content-type'] || '')) {
     return send(res, 415, { error: 'JSON only' }, origin);
@@ -90,25 +103,37 @@ async function api(req, res, origin) {
   if (route === 'POST /api/check') {
     const { ip } = await readJson(req);
     if (!IP.test(ip || '')) return send(res, 400, { error: 'IP no válida' }, origin);
-    return send(res, 200, await scan.check(ip), origin);
+    const tv = await scan.check(ip);
+    if (tv.brand === 'samsung') Object.assign(tv, await samsung.inspect(ip));
+    if (tv.brand === 'samsung' && !tv.name && tv.info && tv.info.name) tv.name = tv.info.name.replace(/^\[TV\]\s*/, '');
+    return send(res, 200, tv, origin);
   }
+  // Samsung TVs of 2023 and newer: the person signs in to their Samsung account (Samsung's page, opened by the web page).
+  if (route === 'POST /api/samsung/login') return send(res, 200, { url: samsungCert.startLogin() }, origin);
+  if (route === 'GET /api/samsung/login') return send(res, 200, samsungCert.loginState(), origin);
   if (route === 'POST /api/install') {
     const b = await readJson(req);
     if (!bundle) return send(res, 500, { error: 'Este conector no trae los paquetes de FreeTV.' }, origin);
-    if (b.brand !== 'lg') return send(res, 400, { error: 'Por ahora el conector solo instala en teles LG.' }, origin);
+    if (b.brand !== 'lg' && b.brand !== 'samsung') return send(res, 400, { error: 'El programa instala en teles LG y Samsung.' }, origin);
     if (!IP.test(b.ip || '')) return send(res, 400, { error: 'La IP no es válida (por ejemplo 192.168.1.140).' }, origin);
-    if (!/^[A-Za-z0-9]{4,12}$/.test(String(b.passphrase || '').trim())) return send(res, 400, { error: 'Escribe la passphrase de la tele (6 letras y números).' }, origin);
     if (running && running.state === 'running') return send(res, 409, { error: 'Ya hay una instalación en marcha.', job: running.id }, origin);
+    if (b.brand === 'samsung') {
+      if (!bundle.samsung) return send(res, 500, { error: 'Este programa no trae FreeTV para Samsung: descárgalo otra vez.' }, origin);
+      const settings = Object.assign({}, b.settings || {}, { tizenbrew: !!(b.settings && b.settings.tizenbrew === true) });
+      const job = new samsung.Job(b.ip, settings);
+      jobs.set(job.id, job);
+      running = job;
+      console.log('  ▸ Instalando en la Samsung / Installing on the Samsung ' + job.ip + '…');
+      samsung.run(job, bundle, settings).then(() => report(job));
+      return send(res, 200, { job: job.id }, origin);
+    }
+    if (!/^[A-Za-z0-9]{4,12}$/.test(String(b.passphrase || '').trim())) return send(res, 400, { error: 'Escribe la passphrase de la tele (6 letras y números).' }, origin);
     const settings = Object.assign({}, b.settings || {}, { store: !!(b.settings && b.settings.store === true) });
     const job = new lg.Job(b.ip, settings);
     jobs.set(job.id, job);
     running = job;
     console.log('  ▸ Instalando en / Installing on ' + job.ip + '…');
-    lg.run(job, bundle, b.passphrase, settings).then(() => {
-      console.log(job.state === 'done'
-        ? '  ✓ ¡Hecho! Ya puedes cerrar esta ventana. / Done! You can close this window now.'
-        : '  ✗ No se pudo terminar / It could not finish: ' + (job.error ? job.error.message : '') + '\n    (Puedes volver a intentarlo desde el navegador. / You can try again from the browser.)');
-    });
+    lg.run(job, bundle, b.passphrase, settings).then(() => report(job));
     return send(res, 200, { job: job.id }, origin);
   }
   const m = route.match(/^GET \/api\/job\/([a-f0-9]{12})$/);

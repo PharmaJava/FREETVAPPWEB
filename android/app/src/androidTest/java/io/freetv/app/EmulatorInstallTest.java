@@ -24,12 +24,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.freetv.core.Installer;
+import io.freetv.core.Samsung;
 
 /**
  * The Android app, on an Android emulator, against the pretend LG TV that runs on the build machine (connector/test/fake-tv-daemon.js;
- * an emulator reaches its host as 10.0.2.2). Two tests:
+ * an emulator reaches its host as 10.0.2.2). Three tests:
  *  1. the installer alone (io.freetv.core) on a real Android runtime: SSH, the remote-control WebSocket, rewriting the .ipk, HTTP;
- *  2. the whole app as a person uses it: the page in the WebView, the buttons, the bridge to the installer, to "FreeTV is on your TV".
+ *  2. the Samsung installer alone, against the pretend Samsung TV there: SDB, signing with the app's certificates;
+ *  3. the whole app as a person uses it: the page in the WebView, the buttons, the bridge to the installer, to "FreeTV is on your TV".
  */
 public class EmulatorInstallTest {
     static final String TV = "10.0.2.2";
@@ -59,6 +61,21 @@ public class EmulatorInstallTest {
 
         Installer.Job job = new Installer.Job(TV, false);
         Installer.run(job, bundle, PASSPHRASE, new JSONObject().put("city", "Sevilla").put("latitude", 37.3891).put("longitude", -5.9845).put("country", "ES"));
+        assertEquals(job.view().toString(), "done", job.state);
+    }
+
+    @Test
+    public void theSamsungInstallerWorksOnAnAndroidRuntime() throws Exception {
+        // The pretend Samsung TV (Tizen 6) checks the signatures made here, on Android, with the certificates the app carries.
+        Context app = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        AssetManager a = app.getAssets();
+        Installer.Bundle bundle = new Installer.Bundle(new JSONObject(new String(read(a, "bundle/bundle.json"), StandardCharsets.UTF_8)),
+                read(a, "bundle/launcher.ipk"), read(a, "bundle/nativehome.ipk"), read(a, "bundle/samsung/FreeTV.wgt"),
+                new JSONObject(new String(read(a, "bundle/samsung/certs.json"), StandardCharsets.UTF_8)));
+        JSONObject seen = Samsung.inspect(TV);
+        assertTrue(seen.toString(), seen.getBoolean("reachable"));
+        Installer.Job job = Samsung.newJob(TV, false);
+        Samsung.run(job, bundle, new JSONObject().put("city", "Sevilla").put("latitude", 37.3891).put("longitude", -5.9845).put("country", "ES"));
         assertEquals(job.view().toString(), "done", job.state);
     }
 

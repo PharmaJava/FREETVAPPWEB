@@ -7,7 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The same small API the computer Conector answers (connector/src/main.js), for the web page inside the Android app:
- *   GET /api/hello, POST /api/scan, POST /api/check {ip}, POST /api/install {brand, ip, passphrase, settings}, GET /api/job/&lt;id&gt;
+ *   GET /api/hello, POST /api/scan, POST /api/check {ip}, POST /api/install {brand, ip, passphrase, settings}, GET /api/job/&lt;id&gt;,
+ *   POST and GET /api/samsung/login
  * The page calls it through the app's JavaScript bridge instead of http.
  */
 public final class Api {
@@ -37,6 +38,8 @@ public final class Api {
                 JSONObject r = new JSONObject().put("app", "freetv-conector").put("platform", platform).put("version", VERSION)
                         .put("ready", bundle != null).put("busy", running != null && "running".equals(running.state));
                 if (bundle != null) r.put("freetv", bundle.info.optString("freetv")).put("launcher", bundle.info.optJSONObject("launcher"));
+                r.put("samsung", bundle != null && bundle.samsungWgt != null && bundle.samsungCerts != null);
+                r.put("addresses", new org.json.JSONArray(Scanner.addresses()));
                 return new Reply(200, r);
             }
             JSONObject b = body == null || body.isEmpty() ? new JSONObject() : new JSONObject(body);
@@ -44,13 +47,33 @@ public final class Api {
             if (route.equals("POST /api/check")) {
                 String ip = b.optString("ip", "");
                 if (!ip.matches(IP)) return error(400, "IP no válida");
-                return new Reply(200, Scanner.check(ip));
+                JSONObject tv = Scanner.check(ip);
+                if ("samsung".equals(tv.optString("brand"))) {
+                    JSONObject more = Samsung.inspect(ip);
+                    for (java.util.Iterator<String> it = more.keys(); it.hasNext(); ) { String k = it.next(); tv.put(k, more.get(k)); }
+                }
+                return new Reply(200, tv);
             }
+            // Samsung TVs of 2023 and newer: the person signs in to their Samsung account in the phone's browser.
+            if (route.equals("POST /api/samsung/login")) return new Reply(200, new JSONObject().put("url", SamsungCert.startLogin()));
+            if (route.equals("GET /api/samsung/login")) return new Reply(200, new JSONObject().put("state", SamsungCert.loginState()));
             if (route.equals("POST /api/install")) {
                 if (bundle == null) return error(500, "Esta app no trae los paquetes de FreeTV.");
-                if (!"lg".equals(b.optString("brand"))) return error(400, "Por ahora solo se instala en teles LG.");
+                String brand = b.optString("brand");
+                if (!"lg".equals(brand) && !"samsung".equals(brand)) return error(400, "La app instala en teles LG y Samsung.");
                 String ip = b.optString("ip", "");
                 if (!ip.matches(IP)) return error(400, "La IP no es válida (por ejemplo 192.168.1.140).");
+                if (running != null && "running".equals(running.state)) return error(409, "Ya hay una instalación en marcha.");
+                if ("samsung".equals(brand)) {
+                    if (bundle.samsungWgt == null || bundle.samsungCerts == null) return error(500, "Esta app no trae FreeTV para Samsung: descárgala otra vez.");
+                    final JSONObject ss = b.optJSONObject("settings") == null ? new JSONObject() : b.getJSONObject("settings");
+                    ss.put("tizenbrew", ss.optBoolean("tizenbrew", false));
+                    final Installer.Job sj = Samsung.newJob(ip, ss.getBoolean("tizenbrew"));
+                    jobs.put(sj.id, sj);
+                    running = sj;
+                    new Thread(() -> Samsung.run(sj, bundle, ss), "freetv-install").start();
+                    return new Reply(200, new JSONObject().put("job", sj.id));
+                }
                 String pass = b.optString("passphrase", "").trim();
                 if (!pass.matches("[A-Za-z0-9]{4,12}")) return error(400, "Escribe la passphrase de la tele (6 letras y números).");
                 if (running != null && "running".equals(running.state)) return error(409, "Ya hay una instalación en marcha.");

@@ -11,7 +11,9 @@
 const http = require('http');
 const path = require('path');
 const { spawn } = require('child_process');
+const fs = require('fs');
 const fakeTv = require('./fake-tv');
+const fakeSamsung = require('./fake-samsung');
 
 const exe = process.argv[2];
 if (!exe) { console.error('usage: node test/e2e.js <program>'); process.exit(2); }
@@ -44,9 +46,9 @@ async function waitFor(fn, seconds, what) {
   throw new Error('timed out: ' + what);
 }
 
-async function install(passphrase) {
-  const r = await request('POST', '/api/install', { brand: 'lg', ip: '127.0.0.1', passphrase,
-    settings: { city: 'Sevilla', latitude: 37.3891, longitude: -5.9845, country: 'ES', hideServices: ['disney'], store: false } });
+async function install(passphrase, brand = 'lg', extra = {}) {
+  const r = await request('POST', '/api/install', { brand, ip: '127.0.0.1', passphrase,
+    settings: Object.assign({ city: 'Sevilla', latitude: 37.3891, longitude: -5.9845, country: 'ES', hideServices: ['disney'], store: false }, extra) });
   if (r.status !== 200) return { error: json(r).error || r.status };
   const id = json(r).job;
   return waitFor(async () => { const j = json(await request('GET', '/api/job/' + id)); return j.state !== 'running' ? j : null; }, 120, 'the install to end');
@@ -95,6 +97,26 @@ async function install(passphrase) {
     ok(Object.keys(tv.files).some((f) => f.endsWith('/state/ssap-key.json')), 'the Home helper got its pairing key');
     ok(tv.eim && tv.launched.indexOf('com.local.nativehome') >= 0, 'the Home helper was registered for early start and started');
     ok(!Object.keys(tv.files).some((f) => f.endsWith('key.pem')), 'no store key was left on the TV (it was not asked for)');
+
+    // Samsung (2017-2022): the same program, a pretend Samsung TV that trusts the CAs of the certificates this program carries.
+    const certsFile = path.join(__dirname, '..', 'bundle', 'samsung', 'certs.json');
+    if (!fs.existsSync(certsFile)) {
+      ok(!hello.samsung, 'this build carries no Samsung certificates (could not download them) and says so');
+    } else {
+      ok(hello.samsung === true, 'it carries FreeTV for Samsung');
+      const certs = JSON.parse(fs.readFileSync(certsFile, 'utf8'));
+      const trusted = { author: [certs.tizen.author.chain[1]],
+        distributor: [certs.tizen.distributor.chain[1]].concat(certs.tizen.distributorNew ? [certs.tizen.distributorNew.chain[1]] : []) };
+      const sam = await fakeSamsung.start({ version: '6.0', trusted, hostIp: '127.0.0.1' });
+      try {
+        const done = await install(undefined, 'samsung', { tizenbrew: false });
+        ok(done.state === 'done', 'Samsung: the install finishes' + (done.state === 'done' ? '' : ': ' + JSON.stringify(done.error || done) + ' ' + (sam.lastError || '')));
+        ok(!!sam.installed.FreeTVhome, 'Samsung: FreeTV reached the TV, its signatures checked against the Tizen CAs');
+        const cfg = sam.installed.FreeTVhome && sam.installed.FreeTVhome.files.find((f) => f.name === 'config.js');
+        ok(!!cfg && /"city":"Sevilla"/.test(cfg.data.toString()), 'Samsung: with the settings from the page');
+        ok(sam.launched.includes('FreeTVhome.FreeTV'), 'Samsung: FreeTV opened on the TV');
+      } finally { await sam.stop(); }
+    }
   } catch (e) {
     ok(false, 'unexpected: ' + (e && e.stack || e));
     console.log('Program output:\n' + output);

@@ -148,7 +148,9 @@ public class InstallerTest {
         Api api = new Api(bundle(), "android");
         assertTrue(api.handle("GET", "/api/hello", null).json.contains("\"ready\":true"));
         assertEquals(400, api.handle("POST", "/api/install", "{\"brand\":\"lg\",\"ip\":\"1.2.3\",\"passphrase\":\"A1B2C3\"}").status);
-        assertEquals(400, api.handle("POST", "/api/install", "{\"brand\":\"samsung\",\"ip\":\"1.2.3.4\",\"passphrase\":\"A1B2C3\"}").status);
+        // A bundle without FreeTV for Samsung says so; another brand is refused.
+        assertEquals(500, api.handle("POST", "/api/install", "{\"brand\":\"samsung\",\"ip\":\"1.2.3.4\"}").status);
+        assertEquals(400, api.handle("POST", "/api/install", "{\"brand\":\"sony\",\"ip\":\"1.2.3.4\",\"passphrase\":\"A1B2C3\"}").status);
         try (Tv tv = new Tv()) {
             JSONObject check = new JSONObject(api.handle("POST", "/api/check", "{\"ip\":\"127.0.0.1\"}").json);
             assertEquals("lg", check.getString("brand"));

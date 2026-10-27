@@ -17,7 +17,7 @@ dependencies {
 tasks.register('installTest', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'io.freetv.core.Check'
-    args 'io.freetv.core.InstallerTest'
+    args 'io.freetv.core.InstallerTest', 'io.freetv.core.SamsungTest'
     systemProperty 'freetv.repo', rootProject.projectDir.parentFile.absolutePath
 }
 test.dependsOn installTest

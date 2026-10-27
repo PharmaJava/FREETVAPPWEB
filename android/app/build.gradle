@@ -69,6 +69,8 @@ def repo = rootProject.projectDir.parentFile
 tasks.register('freetvAssets', Sync) {
     from(repo) { include 'index.html', 'i18n.js', 'landing.js', 'app.js', 'style.css', 'icon.svg'; into 'site' }
     from(new File(repo, 'connector/bundle')) { include 'bundle.json', 'launcher.ipk', 'nativehome.ipk'; into 'bundle' }
+    // FreeTV for Samsung and the certificates to sign it (when the bundle has them: the app works for LG without them).
+    from(new File(repo, 'connector/bundle/samsung')) { include 'FreeTV.wgt', 'certs.json'; into 'bundle/samsung' }
     into layout.buildDirectory.dir('generated/freetv-assets')
     doFirst {
         if (!new File(repo, 'connector/bundle/launcher.ipk').exists()) throw new GradleException('Falta connector/bundle: ejecuta antes connector/scripts/build-bundle.sh')

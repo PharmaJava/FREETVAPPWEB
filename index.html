@@ -211,7 +211,7 @@
     <p class="lead" data-t="brand.lead"></p>
     <div class="choices">
       <button class="choice" data-brand="lg"><span class="logo lg">LG</span><span>LG<small data-t="brand.lg"></small></span></button>
-      <button class="choice" data-brand="samsung"><span class="logo samsung">S</span><span>Samsung<small data-t="brand.later"></small></span></button>
+      <button class="choice" data-brand="samsung"><span class="logo samsung">S</span><span>Samsung<small data-t="brand.samsung"></small></span></button>
       <button class="choice" data-brand="android"><span class="logo android">▶</span><span>Android TV / Google TV<small data-t="brand.atv"></small></span></button>
     </div>
     <button class="link" data-go="prepare" data-t="back">← Back</button>
@@ -227,6 +227,12 @@
   <section class="step" data-step="prepare" data-n="2" hidden>
     <p class="crumb" data-t="crumb.2">Step 2 of 4</p>
     <h1 data-t="prep.h1">Get the TV ready</h1>
+    <h2 class="sub" data-t="prep.which"></h2>
+    <div class="brand-tabs" role="group">
+      <button type="button" class="brand-tab" data-tab="lg"><span class="logo lg">LG</span> LG</button>
+      <button type="button" class="brand-tab" data-tab="samsung"><span class="logo samsung">S</span> Samsung</button>
+    </div>
+    <div id="prep-lg">
     <p class="lead" data-t="prep.lead"></p>
     <ol class="checklist">
       <li><label><input type="checkbox"> <span data-t="prep.1"></span></label></li>
@@ -243,6 +249,23 @@
       <div class="tv-cap" data-t="prep.cap"></div>
     </div>
     <p class="note" data-t="prep.tip"></p>
+    </div>
+    <div id="prep-samsung" hidden>
+      <p class="lead" data-t="sprep.lead"></p>
+      <ol class="checklist samsung-list">
+        <li><label><input type="checkbox"> <span data-t="sprep.1"></span></label></li>
+        <li><label><input type="checkbox"> <span data-t="sprep.2"></span></label></li>
+        <li><label><input type="checkbox"> <span id="sprep-3"></span></label></li>
+        <li><label><input type="checkbox"> <span data-t="sprep.4"></span></label></li>
+        <li><label><input type="checkbox"> <span data-t="sprep.5"></span></label></li>
+      </ol>
+      <div class="tv-mock" aria-hidden="true">
+        <div class="tv-row"><span>Developer mode</span><b>On</b></div>
+        <div class="tv-row hl"><span>Host PC IP</span><code id="mock-host">192.168.1.23</code></div>
+        <div class="tv-cap" data-t="sprep.cap"></div>
+      </div>
+      <p class="note" data-t="sprep.tip"></p>
+    </div>
     <p class="small"><button class="link" data-go="brand" data-t="prep.other">Not an LG TV?</button></p>
     <div class="row">
       <button class="link" data-go="connector" data-t="back">← Back</button>
@@ -279,6 +302,17 @@
     <h1 data-t="details.h1">Last step</h1>
     <p class="lead" id="chosen-tv"></p>
 
+    <div id="samsung-box" hidden>
+      <div id="sam-status" class="status wait"></div>
+      <div id="sam-login" class="login-box" hidden>
+        <p data-t="sam.login.text"></p>
+        <button type="button" class="big primary" id="sam-login-btn" data-t="sam.login.button">Sign in with Samsung</button>
+        <p class="small" id="sam-login-msg"></p>
+      </div>
+      <label class="check"><input type="checkbox" id="tizenbrew" checked> <span><span data-t="opt.tizenbrew"></span>
+        <span class="help" data-t="opt.tizenbrew.help"></span></span></label>
+    </div>
+    <div id="lg-fields">
     <label class="field">
       <span class="label" data-t="pass.label"></span>
       <span class="help" data-t="pass.help"></span>
@@ -293,6 +327,7 @@
         <div class="tv-row hl"><span>Passphrase</span><code>A1B2C3</code></div>
       </div>
     </details>
+    </div>
 
     <label class="field">
       <span class="label" data-t="city.label"></span>
@@ -316,7 +351,7 @@
       </label>
       <label class="check"><input type="checkbox" id="hideAnimation"> <span data-t="opt.anim"></span></label>
       <label class="check"><input type="checkbox" id="showCrypto" checked> <span data-t="opt.crypto"></span></label>
-      <label class="check"><input type="checkbox" id="store"> <span><span data-t="opt.store"></span>
+      <label class="check" id="store-row"><input type="checkbox" id="store"> <span><span data-t="opt.store"></span>
         <span class="help" data-t="opt.store.help"></span></span></label>
     </details>
 
@@ -337,11 +372,12 @@
     <ol id="steps" class="steps"></ol>
     <div id="done" hidden>
       <div class="status ok big-ok">🎉 <span data-t="progress.done"></span></div>
-      <ul class="tips" data-t="progress.tips"></ul>
+      <ul class="tips" id="tips-lg" data-t="progress.tips"></ul>
+      <ul class="tips" id="tips-samsung" data-t="progress.tips.samsung" hidden></ul>
     </div>
     <div id="failed" hidden>
       <div class="status bad"><span>✗</span> <span id="fail-msg"></span></div>
-      <div class="fixes" data-t="fail.fixes"></div>
+      <div class="fixes" id="fixes"></div>
       <div class="row">
         <button class="big primary" id="retry" data-t="progress.retry">Try again</button>
       </div>

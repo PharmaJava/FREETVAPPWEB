@@ -40,7 +40,11 @@ require('esbuild').buildSync({
 
 // 2. The blob: the program plus its assets (the page and FreeTV's packages).
 const assets = {};
-for (const f of fs.readdirSync(BUNDLE)) assets['bundle/' + f] = path.join(BUNDLE, f);
+for (const f of fs.readdirSync(BUNDLE)) {
+  const full = path.join(BUNDLE, f);
+  if (fs.statSync(full).isDirectory()) { for (const g of fs.readdirSync(full)) assets['bundle/' + f + '/' + g] = path.join(full, g); }
+  else assets['bundle/' + f] = full;
+}
 for (const f of SITE_FILES) assets['site/' + f] = path.join(SITE, f);
 fs.writeFileSync(path.join(DIST, 'sea-config.json'), JSON.stringify({
   main: path.join(DIST, 'conector.js'), output: path.join(DIST, 'sea-prep.blob'),

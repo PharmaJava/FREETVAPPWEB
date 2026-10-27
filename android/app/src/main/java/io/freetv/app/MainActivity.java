@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
@@ -25,6 +26,7 @@ import java.util.concurrent.Executors;
 
 import io.freetv.core.Api;
 import io.freetv.core.Installer;
+import io.freetv.core.SamsungCert;
 
 /**
  * FreeTV for Android: the same web page as GitHub Pages (inside the app, from its assets), and under it the installer
@@ -81,8 +83,16 @@ public class MainActivity extends Activity {
             synchronized (this) {
                 if (api == null) {
                     AssetManager a = getAssets();
+                    byte[] wgt = null;
+                    JSONObject certs = null;
+                    try {
+                        wgt = read(a, "bundle/samsung/FreeTV.wgt");
+                        certs = new JSONObject(new String(read(a, "bundle/samsung/certs.json"), StandardCharsets.UTF_8));
+                    } catch (Exception e) { wgt = null; certs = null; }   // a build without Samsung: LG only
                     Installer.Bundle bundle = new Installer.Bundle(new JSONObject(new String(read(a, "bundle/bundle.json"), StandardCharsets.UTF_8)),
-                            read(a, "bundle/launcher.ipk"), read(a, "bundle/nativehome.ipk"));
+                            read(a, "bundle/launcher.ipk"), read(a, "bundle/nativehome.ipk"), wgt, certs);
+                    // Samsung certificates (2023+ TVs) are kept in the app's own private folder, for the next install.
+                    SamsungCert.dir = new File(getFilesDir(), "samsung");
                     api = new Api(bundle, "android");
                 }
             }

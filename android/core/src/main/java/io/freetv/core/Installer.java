@@ -39,7 +39,13 @@ public final class Installer {
         public final JSONObject info;
         public final byte[] launcher;
         public final byte[] nativeHome;
-        public Bundle(JSONObject info, byte[] launcher, byte[] nativeHome) { this.info = info; this.launcher = launcher; this.nativeHome = nativeHome; }
+        /** FreeTV for Samsung (not signed) and the certificates to sign it (certs.json): null when the bundle has none. */
+        public final byte[] samsungWgt;
+        public final JSONObject samsungCerts;
+        public Bundle(JSONObject info, byte[] launcher, byte[] nativeHome) { this(info, launcher, nativeHome, null, null); }
+        public Bundle(JSONObject info, byte[] launcher, byte[] nativeHome, byte[] samsungWgt, JSONObject samsungCerts) {
+            this.info = info; this.launcher = launcher; this.nativeHome = nativeHome; this.samsungWgt = samsungWgt; this.samsungCerts = samsungCerts;
+        }
     }
 
     private static String num(Object v, double min, double max) {
@@ -94,13 +100,28 @@ public final class Installer {
         final List<String> log = new ArrayList<>();
         volatile String errorCode, errorMessage;
 
-        public Job(String ip, boolean store) {
+        public final String brand;
+
+        /** A job with its own steps ({id, title} pairs), for another brand (Samsung.java). */
+        public Job(String ip, String brand, String[][] stepList) {
+            this.id = newId();
+            this.ip = ip;
+            this.brand = brand;
+            for (String[] st : stepList) steps.add(new Step(st[0], st[1]));
+        }
+
+        static String newId() {
             byte[] r = new byte[6];
             new SecureRandom().nextBytes(r);
             StringBuilder sb = new StringBuilder();
             for (byte b : r) sb.append(String.format("%02x", b));
-            this.id = sb.toString();
+            return sb.toString();
+        }
+
+        public Job(String ip, boolean store) {
+            this.id = newId();
             this.ip = ip;
+            this.brand = "lg";
             steps.add(new Step("key", "Recoger la llave del Modo Desarrollador"));
             steps.add(new Step("ssh", "Conectar con la tele"));
             steps.add(new Step("apps", "Leer las apps de la tele (acepta el aviso en la tele)"));
@@ -119,7 +140,7 @@ public final class Installer {
             for (Step s : steps) st.put(s.json());
             for (String t : log.subList(Math.max(0, log.size() - 60), log.size())) lg.put(new JSONObject().put("text", t));
             JSONObject error = errorCode == null ? null : new JSONObject().put("code", errorCode).put("message", errorMessage);
-            return new JSONObject().put("id", id).put("ip", ip).put("state", state).put("steps", st).put("prompt", prompt)
+            return new JSONObject().put("id", id).put("ip", ip).put("brand", brand).put("state", state).put("steps", st).put("prompt", prompt)
                     .put("log", lg).put("error", error == null ? JSONObject.NULL : error);
         }
     }

@@ -27,7 +27,7 @@
     ['globoplay', 'Globoplay'], ['hotstar', 'Hotstar']
   ];
 
-  var state = { brand: null, tv: null, place: null, connected: false, job: null, scanned: false, os: null };
+  var state = { brand: null, tv: null, place: null, connected: false, job: null, scanned: false, os: null, samLogin: 'none' };
 
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -221,6 +221,7 @@
     state.connected = on;
     helloInfo = info || helloInfo;
     drawConnected();
+    drawSamsungPrep();
   }
   function drawConnected() {
     var on = state.connected, c = $('#conn');
@@ -269,10 +270,34 @@
   });
   $$('[data-brand]').forEach(function (b) {
     b.addEventListener('click', function () {
-      state.brand = b.getAttribute('data-brand');
-      if (state.brand === 'lg') go('prepare'); else showOther(state.brand);
+      var brand = b.getAttribute('data-brand');
+      if (brand === 'lg' || brand === 'samsung') { setBrand(brand); go('prepare'); } else { state.brand = brand; showOther(brand); }
     });
   });
+
+  /* ---------- 2. get the TV ready: LG or Samsung ---------- */
+  function setBrand(brand) {
+    state.brand = brand;
+    save('brand', brand);
+    $$('.brand-tab').forEach(function (t) {
+      var on = t.getAttribute('data-tab') === brand;
+      t.classList.toggle('sel', on);
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    $('#prep-lg').hidden = brand !== 'lg';
+    $('#prep-samsung').hidden = brand !== 'samsung';
+  }
+  $$('.brand-tab').forEach(function (t) { t.addEventListener('click', function () { setBrand(t.getAttribute('data-tab')); }); });
+  setBrand(load('brand') === 'samsung' ? 'samsung' : 'lg');
+  // Samsung's Developer Mode asks for the address of the computer or phone that installs ("Host PC IP"): this device's, when known.
+  function myAddresses() { return (helloInfo && helloInfo.addresses) || []; }
+  function drawSamsungPrep() {
+    var ips = myAddresses();
+    $('#sprep-3').innerHTML = ips.length ? T('sprep.3', { ip: ips.map(function (a) { return '<b class="ip">' + esc(a) + '</b>'; }).join(T('or')) })
+      : T('sprep.3.unknown');
+    $('#mock-host').textContent = ips[0] || '192.168.1.23';
+  }
+  redraws.push(drawSamsungPrep);
 
   /* ---------- 3. checklist remembers ---------- */
   var ticks = load('prepare') || [];
@@ -288,6 +313,8 @@
     if (tv.brand === 'lg') {
       chips += '<span class="chip ' + (tv.devMode ? 'ok">' + T('chip.dev.on') : 'bad">' + T('chip.dev.off')) + '</span>';
       chips += '<span class="chip ' + (tv.keyServer ? 'ok">' + T('chip.key.on') : 'bad">' + T('chip.key.off')) + '</span>';
+    } else if (tv.brand === 'samsung') {
+      chips += '<span class="chip ' + (tv.devMode ? 'ok">' + T('chip.sdev.on') : 'bad">' + T('chip.sdev.off')) + '</span>';
     } else {
       chips = '<span class="chip">' + T('chip.later', { brand: esc(brandName(tv.brand)) }) + '</span>';
     }
@@ -300,7 +327,10 @@
     return b;
   }
   function pick(tv) {
-    if (tv.brand && tv.brand !== 'lg') { state.brand = tv.brand; showOther(tv.brand); return; }
+    if (tv.brand && tv.brand !== 'lg' && tv.brand !== 'samsung') { state.brand = tv.brand; showOther(tv.brand); return; }
+    if (tv.brand === 'samsung' && !(helloInfo && helloInfo.samsung)) { state.brand = 'samsung'; showOther('samsung'); return; }
+    if (tv.brand) setBrand(tv.brand);
+    if (!state.tv || state.tv.ip !== tv.ip) samView = { kind: 'idle' };
     state.tv = tv;
     save('ip', tv.ip);
     go('details');
@@ -319,6 +349,7 @@
       st.innerHTML = '<span>' + T('find.none') + '</span>';
     } else {
       var lgs = v.tvs.filter(function (t) { return t.brand === 'lg'; });
+      if (state.brand === 'samsung') lgs = [];
       st.className = 'status ok';
       st.innerHTML = '<span>' + (v.tvs.length === 1 ? T('find.one') : T('find.many', { n: v.tvs.length })) +
         (lgs.length && !lgs.some(function (t) { return t.keyServer; }) ? T('find.keyoff') : '') + '</span>';
@@ -351,7 +382,7 @@
     msg.textContent = T('find.checking');
     api('POST', '/api/check', { ip: ip }).then(function (tv) {
       if (!tv.brand) {
-        tv.brand = 'lg';   // still let them try: some TVs answer late
+        tv.brand = state.brand === 'samsung' ? 'samsung' : 'lg';   // still let them try: some TVs answer late
         msg.innerHTML = esc(T('find.ip.none')) + ' <button class="link" id="force">' + T('find.try') + '</button>';
         $('#force').addEventListener('click', function () { pick(tv); });
         return;
@@ -365,12 +396,88 @@
   function showChosen() {
     var tv = state.tv;
     if (!tv) return;
+    var sam = tv.brand === 'samsung';
     var warn = '';
     if (tv.brand === 'lg' && tv.devMode === false) warn = T('details.devoff');
     else if (tv.brand === 'lg' && tv.keyServer === false) warn = T('details.keyoff');
-    $('#chosen-tv').innerHTML = T('details.tv', { name: esc(tv.name || 'LG'), ip: esc(tv.ip) }) + warn;
+    $('#chosen-tv').innerHTML = T('details.tv', { name: esc(tv.name || brandName(tv.brand || 'lg')), ip: esc(tv.ip) }) + warn;
+    $('#lg-fields').hidden = sam;
+    $('#store-row').hidden = sam;
+    $('#samsung-box').hidden = !sam;
+    if (sam) drawSamsung();
   }
   redraws.push(showChosen);
+
+  /* ---------- Samsung: can it connect, and does it need a Samsung sign-in (2023 and newer)? ---------- */
+  var samView = { kind: 'idle' };
+  function checkSamsung() {
+    if (!state.tv) return;
+    samView = { kind: 'checking' };
+    drawSamsung();
+    api('POST', '/api/check', { ip: state.tv.ip }).then(function (r) {
+      samView = { kind: 'done', r: r };
+      if (r.hostIp && helloInfo && !(helloInfo.addresses || []).length) helloInfo.addresses = [r.hostIp];
+      drawSamsung();
+    }).catch(function (e) { samView = { kind: 'error', message: unreachable(e) ? T('noprogram') : e.message }; drawSamsung(); });
+  }
+  function drawSamsung() {
+    var st = $('#sam-status'), v = samView, login = $('#sam-login');
+    if (v.kind === 'idle') { checkSamsung(); return; }
+    login.hidden = true;
+    if (v.kind === 'checking') {
+      st.className = 'status wait';
+      st.innerHTML = '<span class="spinner"></span> <span>' + T('sam.checking') + '</span>';
+    } else if (v.kind === 'error') {
+      st.className = 'status bad';
+      st.innerHTML = '<span>' + esc(v.message) + '</span>';
+    } else if (!v.r.reachable) {
+      st.className = 'status bad';
+      st.innerHTML = '<span>' + T('sam.unreachable', { ip: '<b class="ip">' + esc(v.r.hostIp || '?') + '</b>' }) +
+        ' <button type="button" class="link" id="sam-recheck">' + T('sam.recheck') + '</button></span>';
+      $('#sam-recheck').addEventListener('click', checkSamsung);
+    } else {
+      st.className = 'status ok';
+      st.innerHTML = '<span>✓ ' + T('sam.ok', { tizen: esc(v.r.tizen || '?') }) + '</span>';
+      login.hidden = !v.r.needsSamsungLogin;
+      drawLogin();
+    }
+  }
+  redraws.push(function () { if (state.tv && state.tv.brand === 'samsung' && samView.kind !== 'idle') drawSamsung(); });
+  function drawLogin() {
+    var m = $('#sam-login-msg');
+    m.className = 'small';
+    if (state.samLogin === 'waiting') m.innerHTML = '<span class="spinner"></span> ' + T('sam.login.waiting');
+    else if (state.samLogin === 'done') { m.className = 'small ok-text'; m.textContent = '✓ ' + T('sam.login.done'); }
+    else if (state.samLogin === 'failed') { m.className = 'small error'; m.textContent = T('sam.login.failed'); }
+    else m.textContent = '';
+    $('#sam-login-btn').hidden = state.samLogin === 'done';
+  }
+  var loginTimer = null;
+  $('#sam-login-btn').addEventListener('click', function () {
+    // A window opened right away (browsers block one opened later, after the answer); the app opens the phone's browser.
+    var w = APP ? null : window.open('', '_blank');
+    state.samLogin = 'waiting';
+    drawLogin();
+    api('POST', '/api/samsung/login', {}).then(function (r) {
+      if (APP) location.href = r.url;
+      else if (w) w.location.href = r.url;
+      else window.open(r.url, '_blank');
+      clearInterval(loginTimer);
+      loginTimer = setInterval(function () {
+        api('GET', '/api/samsung/login').then(function (s) {
+          if (s.state === 'waiting') return;
+          clearInterval(loginTimer);
+          state.samLogin = s.state === 'done' ? 'done' : 'failed';
+          drawLogin();
+        }).catch(function () { /* try again */ });
+      }, 1500);
+    }).catch(function (e) {
+      if (w) w.close();
+      state.samLogin = 'failed';
+      drawLogin();
+      $('#sam-login-msg').textContent = unreachable(e) ? T('noprogram') : e.message;
+    });
+  });
 
   var services = $('#services'), hidden = load('hideServices') || [];
   SERVICES.forEach(function (s) {
@@ -419,15 +526,17 @@
     var msg = $('#details-msg');
     msg.hidden = true;
     var pass = $('#pass').value.trim();
-    if (!/^[A-Za-z0-9]{4,12}$/.test(pass)) { msg.textContent = T('pass.bad'); msg.hidden = false; $('#pass').focus(); return; }
     if (!state.tv) { go('find'); return; }
+    var sam = state.tv.brand === 'samsung';
+    if (!sam && !/^[A-Za-z0-9]{4,12}$/.test(pass)) { msg.textContent = T('pass.bad'); msg.hidden = false; $('#pass').focus(); return; }
     var hide = $$('#services input').filter(function (c) { return !c.checked; }).map(function (c) { return c.value; });
     save('hideServices', hide);
     var settings = {
       hideServices: hide,
       hideAnimation: $('#hideAnimation').checked,
       showCrypto: $('#showCrypto').checked,
-      store: $('#store').checked,
+      store: !sam && $('#store').checked,
+      tizenbrew: sam && $('#tizenbrew').checked,
       tmdbKey: $('#tmdb').value.trim(),
       language: 'auto'   // FreeTV on the TV follows the TV's own language
     };
@@ -439,7 +548,8 @@
     }
     this.disabled = true;
     var btn = this;
-    api('POST', '/api/install', { brand: 'lg', ip: state.tv.ip, passphrase: pass, settings: settings }).then(function (r) {
+    var body = sam ? { brand: 'samsung', ip: state.tv.ip, settings: settings } : { brand: 'lg', ip: state.tv.ip, passphrase: pass, settings: settings };
+    api('POST', '/api/install', body).then(function (r) {
       state.job = r.job;
       startProgress();
     }).catch(function (e) {
@@ -454,10 +564,13 @@
   function noteText(note) {
     var m = /^(\d+) apps$/.exec(note);
     if (m) return T('note.apps', { n: m[1] });
-    return note === 'activada' ? T('note.on') : note === 'no disponible' ? T('note.na') : note;
+    var known = { 'activada': 'note.on', 'no disponible': 'note.na', 'certificado de Samsung': 'note.cert.samsung',
+      'certificado de Tizen': 'note.cert.tizen', 'ábrela tú desde Apps': 'note.openit', 'no se pudo': 'note.failed' };
+    return known[note] ? T(known[note]) : note;
   }
   function stepTitle(s) {
     if (s.id === 'store' && /\(/.test(s.title)) return T('step.store.off');   // the installers say "(no activada)" when it is off
+    if (s.id === 'tizenbrew' && /no pedido/.test(s.title)) return T('step.tizenbrew.off');
     return TEXTS[lang]['step.' + s.id] ? T('step.' + s.id) : s.title;
   }
   function drawJob() {
@@ -470,6 +583,9 @@
     $('#prompt').hidden = !j.prompt;
     $('#log').textContent = j.log.map(function (l) { return l.text; }).join('\n');
     $('#done').hidden = j.state !== 'done';
+    $('#tips-lg').hidden = j.brand === 'samsung';
+    $('#tips-samsung').hidden = j.brand !== 'samsung';
+    $('#fixes').innerHTML = T(j.brand === 'samsung' ? 'fail.fixes.samsung' : 'fail.fixes');
     $('#failed').hidden = j.state !== 'failed';
     $('#progress-title').textContent = T(j.state === 'done' ? 'progress.done.title' : j.state === 'failed' ? 'progress.failed.title' : 'progress.title');
     if (j.state === 'failed') {
@@ -502,6 +618,9 @@
   }
   $('#retry').addEventListener('click', function () {
     if (state.failCode === 'passphrase' || state.failCode === 'keyserver') $('#pass').value = '';
+    // Samsung: the sign-in is used up by an attempt, and the TV may have changed (Developer mode, Host PC IP): look again.
+    if (/^samsung-/.test(state.failCode || '')) state.samLogin = 'none';
+    samView = { kind: 'idle' };
     go('details');
   });
 
