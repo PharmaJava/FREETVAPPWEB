@@ -275,6 +275,22 @@ jobs:
           done
       - name: Note which FreeTV these downloads carry
         run: python3 -c "import json; print(json.load(open('bundle/bundle.json'))['freetv'])" > downloads/freetv-version.txt
+      - name: Add up the downloads of the files about to be replaced
+        # Every build uploads the files again and GitHub's counters start from zero: the running total is kept on the
+        # "datos-compilacion" release (descargas.json) and shown in this run's summary.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p counts
+          if ! gh release view datos-compilacion >/dev/null 2>&1; then
+            gh release create datos-compilacion --prerelease --title "Datos de compilación" \
+              --notes "Lo que la compilación guarda entre una vez y otra (el certificado de autor de FreeTV para Samsung y el total de descargas). No es una descarga."
+          fi
+          gh release download datos-compilacion --repo "$GITHUB_REPOSITORY" -p descargas.json -D counts || echo "no total yet: it starts now"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > counts/release.json || echo '{}' > counts/release.json
+          python3 .github/scripts/count-downloads.py counts/release.json counts/descargas.json
+          gh release upload datos-compilacion counts/descargas.json --clobber
       - name: Put the downloads on the "descargas" release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -113,7 +113,9 @@ installation stay in Spanish.
     Mac and Linux, and the **app** on an Android emulator (Android 9 and 14), installer and page,
   - uploads them to the **`descargas`** release, which is the one the page links to: `FreeTV-Windows.exe`, `FreeTV-Android.apk`,
     `FreeTV-Mac-AppleSilicon.zip`, `FreeTV-Mac-Intel.zip` and `FreeTV-Linux`. Files of earlier builds that are no longer made are deleted.
-  - The run's summary says which FreeTV commit the downloads carry.
+  - The run's summary says which FreeTV commit the downloads carry, and **how many times each download was downloaded so far**:
+    GitHub's counters restart with every build, so before replacing the files the build adds their counts to a running total
+    (`descargas.json` on the `datos-compilacion` release; `.github/scripts/count-downloads.py`). Page visits are not counted: GitHub does not say.
 - To pick up a new FreeTV right now without changing anything here: **Actions → Build and publish → Run workflow**.
 - To change a text: `landing.js` (the landing page) or `i18n.js` (the installer), in both languages (same keys).
 - The pictures are not here: the page loads them from the FreeTV repository (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Change them there. Only `img/hero.webp` is kept as a fallback for the top photo.
@@ -306,7 +308,7 @@ Los instaladores explican los problemas en español; la web tiene su propio text
   - los sube a la *release* **`descargas`**, que es la que enlaza la web: `FreeTV-Windows.exe`, `FreeTV-Android.apk`,
     `FreeTV-Mac-AppleSilicon.zip`, `FreeTV-Mac-Intel.zip` y `FreeTV-Linux`. Los archivos de versiones anteriores que ya no se hacen
     se borran.
-  - El resumen de la ejecución dice qué commit de FreeTV llevan las descargas.
+  - El resumen de la ejecución dice qué commit de FreeTV llevan las descargas, y **cuántas veces se ha descargado cada archivo hasta ahora**: los contadores de GitHub vuelven a cero con cada compilación, así que antes de reemplazar los archivos la compilación suma sus cuentas a un total acumulado (`descargas.json` en la *release* `datos-compilacion`; `.github/scripts/count-downloads.py`). Las visitas a la web no se cuentan: GitHub no las da.
 - Para meter una versión nueva de FreeTV ahora mismo sin cambiar nada aquí: **Actions → Build and publish → Run workflow**.
 - Para cambiar un texto: `landing.js` (la presentación) o `i18n.js` (el instalador), en los dos idiomas (mismas claves).
 - Las imágenes no están aquí: la web las carga del repositorio de FreeTV (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Cámbialas allí. Solo `img/hero.webp` se guarda como respaldo de la foto de arriba.
