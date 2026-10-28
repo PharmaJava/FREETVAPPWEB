@@ -3,7 +3,7 @@
 #   - the Android app (android/), with those packages and the web page inside,
 #   - FreeTV for Windows (the computer program, also for macOS and Linux), with the same inside,
 #   - all of them on the release "descargas", the one the web page links to.
-# Runs on every push to main, by hand (Actions → Build and publish → Run workflow), and every 6 hours: then it only builds when
+# Runs on every push to main, by hand (Actions → Build and publish → Run workflow), and every hour: then it only builds when
 # FreeTV (FREETV_REPO) has a newer commit than the one the downloads on the release were built from (freetv-version.txt there), so a
 # change in FreeTV reaches the downloads by itself. (GitHub pauses scheduled runs of a repository with no activity for 60 days: any
 # push or a manual run starts them again.)
@@ -15,7 +15,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 * * * *'
 
 env:
   FREETV_REPO: PharmaJava/FreeTV

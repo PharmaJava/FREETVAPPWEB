@@ -100,8 +100,8 @@ installation stay in Spanish.
 - **Page:** GitHub Pages serves the root of `main` (Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`), at
   https://pharmajava.github.io/FREETVAPPWEB/. `.nojekyll` makes it be served as it is.
 - **Downloads:** the **Build and publish** workflow (`.github/workflows/build.yml`) runs on every *push* to `main`, by hand, and **every
-  6 hours**:
-  - on the 6-hourly run, a first job looks at FreeTV's latest commit and **only builds if it differs** from the one the downloads on the
+  hour**:
+  - on the hourly run, a first job looks at FreeTV's latest commit and **only builds if it differs** from the one the downloads on the
     release were built from (`freetv-version.txt` on the release). That is how a change in FreeTV reaches the downloads by itself.
     (GitHub pauses scheduled runs of a repository with no activity for 60 days: any push or a manual run starts them again.)
   - it builds FreeTV's packages from `PharmaJava/FreeTV` (branch in `FREETV_REF`), for LG and for Samsung (`tizen/build.py`), and takes
@@ -291,8 +291,8 @@ Los instaladores explican los problemas en español; la web tiene su propio text
 - **Web:** GitHub Pages sirve la raíz de `main` (Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`), en
   https://pharmajava.github.io/FREETVAPPWEB/. `.nojekyll` hace que se sirva tal cual.
 - **Descargas:** el flujo **Build and publish** (`.github/workflows/build.yml`) se ejecuta en cada *push* a `main`, a mano y **cada
-  6 horas**:
-  - en la ejecución de cada 6 horas, un primer trabajo mira el último commit de FreeTV y **solo compila si es distinto** del que
+  hora**:
+  - en la ejecución de cada hora, un primer trabajo mira el último commit de FreeTV y **solo compila si es distinto** del que
     llevan las descargas de la *release* (`freetv-version.txt` en la *release*). Así un cambio en FreeTV llega solo a las descargas.
     (GitHub pausa las ejecuciones programadas de un repositorio sin actividad durante 60 días: cualquier *push* o una ejecución a mano
     las vuelve a poner en marcha.)
