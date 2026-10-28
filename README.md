@@ -21,7 +21,7 @@ shown on the TV) and press **Install**. No terminal, nothing else to install.
 
 A landing page, then the installer:
 
-- **Landing:** what FreeTV is (with a real photo from an LG OLED), twelve features, the real screenshots and videos (GIFs) of FreeTV taken straight from the FreeTV repository on GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, so they are always the current ones), how it works in
+- **Landing:** what FreeTV is (with a real photo from an LG OLED), sixteen features (FreeTV 2.1: the weather in full, markets, widgets, a real Store, profiles, the remote's shortcuts…), the real screenshots (18) and videos (GIFs) of FreeTV 2.1 taken straight from the FreeTV repository on GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, so they are always the current ones), how it works in
   three steps, which TVs it works on and an FAQ. Everything is in `index.html` with its texts in `landing.js` (and the installer's in
   `i18n.js`), in both languages.
 - **Installer:** four steps with a progress bar: *1 get the program or the app* (skipped when it is already open) → *2 get the TV
@@ -118,7 +118,7 @@ installation stay in Spanish.
     (`descargas.json` on the `datos-compilacion` release; `.github/scripts/count-downloads.py`). Page visits are not counted: GitHub does not say.
 - To pick up a new FreeTV right now without changing anything here: **Actions → Build and publish → Run workflow**.
 - To change a text: `landing.js` (the landing page) or `i18n.js` (the installer), in both languages (same keys).
-- The pictures are not here: the page loads them from the FreeTV repository (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Change them there. Only `img/hero.webp` is kept as a fallback for the top photo.
+- The pictures are not here: the page loads them from the FreeTV repository (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Change them there. Only `img/hero.webp` (and `img/og.jpg` for social cards) are kept here, made from FreeTV's `docs/screenshot.png`: redo them when that screenshot changes.
 
 ### The Android app
 
@@ -209,7 +209,7 @@ terminal ni nada más que instalar.
 
 Una página de presentación y, después, el instalador:
 
-- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), doce ventajas, las capturas y vídeos (GIF) reales de FreeTV tomados directamente del repositorio de FreeTV en GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, así siempre son las actuales), cómo funciona
+- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), dieciséis ventajas (FreeTV 2.1: el tiempo completo, mercados, widgets, una Tienda de verdad, perfiles, los atajos del mando…), las capturas (18) y vídeos (GIF) reales de FreeTV 2.1 tomados directamente del repositorio de FreeTV en GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, así siempre son las actuales), cómo funciona
   en tres pasos, en qué teles funciona y unas preguntas frecuentes. Todo está en `index.html`, con sus textos en `landing.js` (y los
   del instalador en `i18n.js`), en los dos idiomas.
 - **Instalador:** cuatro pasos con barra de progreso: *1 conseguir el programa o la app* (se salta si ya está abierto) → *2 preparar
@@ -311,7 +311,7 @@ Los instaladores explican los problemas en español; la web tiene su propio text
   - El resumen de la ejecución dice qué commit de FreeTV llevan las descargas, y **cuántas veces se ha descargado cada archivo hasta ahora**: los contadores de GitHub vuelven a cero con cada compilación, así que antes de reemplazar los archivos la compilación suma sus cuentas a un total acumulado (`descargas.json` en la *release* `datos-compilacion`; `.github/scripts/count-downloads.py`). Las visitas a la web no se cuentan: GitHub no las da.
 - Para meter una versión nueva de FreeTV ahora mismo sin cambiar nada aquí: **Actions → Build and publish → Run workflow**.
 - Para cambiar un texto: `landing.js` (la presentación) o `i18n.js` (el instalador), en los dos idiomas (mismas claves).
-- Las imágenes no están aquí: la web las carga del repositorio de FreeTV (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Cámbialas allí. Solo `img/hero.webp` se guarda como respaldo de la foto de arriba.
+- Las imágenes no están aquí: la web las carga del repositorio de FreeTV (`raw.githubusercontent.com/PharmaJava/FreeTV/main/docs/...`). Cámbialas allí. Solo `img/hero.webp` (y `img/og.jpg` para las redes) se guardan aquí, hechas con `docs/screenshot.png` de FreeTV: rehazlas cuando esa captura cambie.
 
 ### La app de Android
 
