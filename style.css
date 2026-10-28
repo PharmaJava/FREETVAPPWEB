@@ -284,7 +284,6 @@ h2 { font-size: 32px; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 22p
 #samsung-box .status { margin-bottom: 12px; }
 .tv-mock .tv-row.hl { background: rgba(255, 122, 158, .22); }
 
-.cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .more-shots { margin: 0 0 18px; }
 .more-shots summary { cursor: pointer; text-align: center; font-weight: 650; padding: 12px; margin: 0 auto 18px; width: fit-content;
   border: 2px solid var(--line); border-radius: 99px; background: var(--card); list-style: none; }
