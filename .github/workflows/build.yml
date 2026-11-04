@@ -300,7 +300,16 @@ jobs:
             gh release create "$RELEASE_TAG" --title "Descargas de FreeTV" --latest \
               --notes "La app de Android y el Conector para ordenador. Empieza en la web: https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/"
           fi
-          gh release upload "$RELEASE_TAG" downloads/* --clobber
+          # One file at a time, each retried: GitHub's upload sometimes answers 404 or drops a connection, and an upload that
+          # dies half way must not leave the release without its downloads (--clobber deletes a file before it uploads it).
+          for f in downloads/*; do
+            ok=
+            for try in 1 2 3 4 5; do
+              if gh release upload "$RELEASE_TAG" "$f" --clobber; then ok=1; break; fi
+              echo "Upload of $f failed (try $try); waiting"; sleep $((try * 10))
+            done
+            [ -n "$ok" ] || { echo "::error::Could not upload $f"; exit 1; }
+          done
           # Files of earlier builds that are no longer made (renamed ones) go away, so the page never links to an old one.
           for old in $(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name'); do
             [ -e "downloads/$old" ] || gh release delete-asset "$RELEASE_TAG" "$old" -y
