@@ -21,7 +21,7 @@ shown on the TV) and press **Install**. No terminal, nothing else to install.
 
 A landing page, then the installer:
 
-- **Landing:** what FreeTV is (with a real photo from an LG OLED), twenty-four features (FreeTV 2.6: the weather in full, markets, widgets, a real Store, profiles, the remote's shortcuts, self-update, memory…), the real screenshots (18) and videos (GIFs) of FreeTV taken straight from the FreeTV repository on GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, so they are always the current ones), how it works in
+- **Landing:** what FreeTV is (with a real photo from an LG OLED), twenty-eight features (FreeTV 2.12: the weather in full, markets, widgets, a real Store, profiles, the remote's shortcuts, self-update, memory, Continue watching with Stremio, Jellyfin and Plex, apps from a GitHub link…), the real screenshots (18) and videos (GIFs) of FreeTV taken straight from the FreeTV repository on GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, so they are always the current ones), how it works in
   three steps, which TVs it works on and an FAQ. Everything is in `index.html` with its texts in `landing.js` (and the installer's in
   `i18n.js`), in both languages.
 - **Installer:** four steps with a progress bar: *1 get the program or the app* (skipped when it is already open) → *2 get the TV
@@ -209,7 +209,7 @@ terminal ni nada más que instalar.
 
 Una página de presentación y, después, el instalador:
 
-- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), veinticuatro ventajas (FreeTV 2.6: el tiempo completo, mercados, widgets, una Tienda de verdad, perfiles, los atajos del mando, la actualización automática, la memoria…), las capturas (18) y vídeos (GIF) reales de FreeTV tomados directamente del repositorio de FreeTV en GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, así siempre son las actuales), cómo funciona
+- **Presentación:** qué es FreeTV (con una foto real de una LG OLED), veintiocho ventajas (FreeTV 2.12: el tiempo completo, mercados, widgets, una Tienda de verdad, perfiles, los atajos del mando, la actualización automática, la memoria, Continuar viendo con Stremio, Jellyfin y Plex, apps desde un enlace de GitHub…), las capturas (18) y vídeos (GIF) reales de FreeTV tomados directamente del repositorio de FreeTV en GitHub (`docs/screens`, `docs/gifs`, `docs/screenshot.png`, así siempre son las actuales), cómo funciona
   en tres pasos, en qué teles funciona y unas preguntas frecuentes. Todo está en `index.html`, con sus textos en `landing.js` (y los
   del instalador en `i18n.js`), en los dos idiomas.
 - **Instalador:** cuatro pasos con barra de progreso: *1 conseguir el programa o la app* (se salta si ya está abierto) → *2 preparar
