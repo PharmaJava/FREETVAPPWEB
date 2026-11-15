@@ -170,7 +170,7 @@
     'hero.eyebrow': 'Free · Open source · No root',
     'hero.h1': 'Take the ads off your TV\'s home screen',
     'hero.lead': 'FreeTV replaces your TV\'s home screen, full of ads, with a clean and fast one: your apps as real icons, suggestions only from ' +
-      'the services you have, your city\'s weather… You install it from a Windows computer or an Android phone, with no coding, and you ' +
+      'the services you have, your city\'s weather… You install it from a Windows or Mac computer (or an Android phone), with no coding, and you ' +
       'can undo it whenever you like.',
     'hero.cta': 'Install on my TV',
     'hero.how': 'See how it works',
