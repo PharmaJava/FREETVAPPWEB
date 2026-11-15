@@ -143,7 +143,7 @@
     'faq.1.q': '¿Es seguro? ¿Hace root?',
     'faq.1.a': 'No hace root ni toca el firmware. Se instala como cualquier app de desarrollador con el Modo Desarrollador de LG, y todo se puede deshacer: mantén Home 2 segundos para volver al inicio de LG, o desinstala FreeTV.',
     'faq.2.q': '¿Qué necesito?',
-    'faq.2.a': 'Una tele LG con webOS (2016 o más) o una Samsung con Tizen (2017 o más) y un ordenador Windows o un móvil Android en el mismo wifi que la tele. En LG, una cuenta gratuita de desarrollador de LG (con correo y contraseña, no con Google ni Apple); en Samsung de 2023 o más, tu cuenta Samsung.',
+    'faq.2.a': 'Una tele LG con webOS (2016 o más), una Samsung con Tizen (2017 o más) o una Android TV / Google TV como las Sony Bravia (Android 8 o más), y un ordenador Windows o Mac (o, en LG y Samsung, un móvil Android) en el mismo wifi que la tele. En LG, una cuenta gratuita de desarrollador de LG (con correo y contraseña, no con Google ni Apple); en Samsung de 2023 o más, tu cuenta Samsung; en Android TV, nada más que activar la depuración en la tele.',
     'faq.3.q': '¿Cuesta algo?',
     'faq.3.a': 'No. FreeTV es gratuito y de código abierto (MIT). La clave de TMDB, que solo hace falta para las sugerencias, es opcional y también gratuita.',
     'faq.4.q': '¿Qué datos salen de mi casa?',
@@ -161,7 +161,7 @@
     'faq.10.q': 'El botón Home o el inicio dejó de funcionar',
     'faq.10.a': 'Si mantuviste Home 2 segundos (salida de emergencia), el ayudante se para, pero solo hasta que enciendas la tele otra vez, y al abrir FreeTV vuelve solo. Si aun así no responde, vuelve a instalar con esta página: instala la versión más reciente, que ya lo trae. Lo ves en Ajustes de inicio → Home.',
     'faq.11.q': '¿Se actualiza FreeTV solo?',
-    'faq.11.a': 'En LG sí, si quieres: Ajustes de inicio → Mantenimiento → «Actualizaciones de FreeTV» (te avisa y espera tu sí; automática; o nunca). Descarga la versión de GitHub, comprueba su huella SHA-256 y la instala sobre la anterior sin perder tus ajustes. En Samsung se actualiza volviendo a esta página y repitiendo la instalación desde el mismo ordenador o móvil.',
+    'faq.11.a': 'En LG sí, si quieres: Ajustes de inicio → Mantenimiento → «Actualizaciones de FreeTV» (te avisa y espera tu sí; automática; o nunca). Descarga la versión de GitHub, comprueba su huella SHA-256 y la instala sobre la anterior sin perder tus ajustes. En Samsung y en Android TV (Sony Bravia…) se actualiza volviendo a esta página y repitiendo la instalación desde el mismo ordenador.',
   };
 
   var en = {
@@ -306,7 +306,7 @@
     'faq.1.q': 'Is it safe? Does it root the TV?',
     'faq.1.a': 'It does not root the TV or touch the firmware. It installs like any developer app through LG\'s Developer Mode, and everything can be undone: hold Home for 2 seconds to go back to LG\'s home, or uninstall FreeTV.',
     'faq.2.q': 'What do I need?',
-    'faq.2.a': 'An LG TV with webOS (2016 or newer) or a Samsung with Tizen (2017 or newer), and a Windows computer or an Android phone on the same Wi-Fi as the TV. On LG, a free LG developer account (with an email and a password, not with Google or Apple); on 2023 and newer Samsungs, your Samsung account.',
+    'faq.2.a': 'An LG TV with webOS (2016 or newer), a Samsung with Tizen (2017 or newer) or an Android TV / Google TV such as a Sony Bravia (Android 8 or newer), and a Windows or Mac computer (or, for LG and Samsung, an Android phone) on the same Wi-Fi as the TV. On LG, a free LG developer account (with an email and a password, not with Google or Apple); on 2023 and newer Samsungs, your Samsung account; on Android TV, only debugging turned on on the TV.',
     'faq.3.q': 'Does it cost anything?',
     'faq.3.a': 'No. FreeTV is free and open source (MIT). The TMDB key, which is only needed for the suggestions, is optional and free too.',
     'faq.4.q': 'What data leaves my home?',
@@ -324,7 +324,7 @@
     'faq.10.q': 'The Home button or the home screen stopped working',
     'faq.10.a': 'If you held Home for 2 seconds (the emergency exit) the helper stops, but only until the TV is turned on again, and opening FreeTV turns it back on by itself. If it still does not answer, install again from this page: it installs the latest version, which has this built in. You can see it in Home Settings → Home.',
     'faq.11.q': 'Does FreeTV update itself?',
-    'faq.11.a': 'On LG it can: Home Settings → Maintenance → "FreeTV updates" (it tells you and waits for your yes; automatic; or never). It downloads the version from GitHub, checks its SHA-256 and installs it over the old one without losing your settings. On Samsung you update by coming back to this page and installing again from the same computer or phone.',
+    'faq.11.a': 'On LG it can: Home Settings → Maintenance → "FreeTV updates" (it tells you and waits for your yes; automatic; or never). It downloads the version from GitHub, checks its SHA-256 and installs it over the old one without losing your settings. On Samsung and Android TV (Sony Bravia…) you update by coming back to this page and installing again from the same computer.',
   };
 
   var T = window.FREETV_TEXTS;
