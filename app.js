@@ -271,7 +271,7 @@
   $$('[data-brand]').forEach(function (b) {
     b.addEventListener('click', function () {
       var brand = b.getAttribute('data-brand');
-      if (brand === 'lg' || brand === 'samsung') { setBrand(brand); go('prepare'); } else { state.brand = brand; showOther(brand); }
+      if (brand === 'lg' || brand === 'samsung' || brand === 'android') { setBrand(brand); go('prepare'); } else { state.brand = brand; showOther(brand); }
     });
   });
 
@@ -286,9 +286,10 @@
     });
     $('#prep-lg').hidden = brand !== 'lg';
     $('#prep-samsung').hidden = brand !== 'samsung';
+    $('#prep-android').hidden = brand !== 'android';
   }
   $$('.brand-tab').forEach(function (t) { t.addEventListener('click', function () { setBrand(t.getAttribute('data-tab')); }); });
-  setBrand(load('brand') === 'samsung' ? 'samsung' : 'lg');
+  setBrand(load('brand') === 'samsung' || load('brand') === 'android' ? load('brand') : 'lg');
   // Samsung's Developer Mode asks for the address of the computer or phone that installs ("Host PC IP"): this device's, when known.
   function myAddresses() { return (helloInfo && helloInfo.addresses) || []; }
   function drawSamsungPrep() {
@@ -315,6 +316,8 @@
       chips += '<span class="chip ' + (tv.keyServer ? 'ok">' + T('chip.key.on') : 'bad">' + T('chip.key.off')) + '</span>';
     } else if (tv.brand === 'samsung') {
       chips += '<span class="chip ' + (tv.devMode ? 'ok">' + T('chip.sdev.on') : 'bad">' + T('chip.sdev.off')) + '</span>';
+    } else if (tv.brand === 'android') {
+      chips += '<span class="chip ' + (tv.devMode ? 'ok">' + T('chip.adb.on') : 'bad">' + T('chip.adb.off')) + '</span>';
     } else {
       chips = '<span class="chip">' + T('chip.later', { brand: esc(brandName(tv.brand)) }) + '</span>';
     }
@@ -327,8 +330,9 @@
     return b;
   }
   function pick(tv) {
-    if (tv.brand && tv.brand !== 'lg' && tv.brand !== 'samsung') { state.brand = tv.brand; showOther(tv.brand); return; }
+    if (tv.brand && tv.brand !== 'lg' && tv.brand !== 'samsung' && tv.brand !== 'android') { state.brand = tv.brand; showOther(tv.brand); return; }
     if (tv.brand === 'samsung' && !(helloInfo && helloInfo.samsung)) { state.brand = 'samsung'; showOther('samsung'); return; }
+    if (tv.brand === 'android' && !(helloInfo && helloInfo.android)) { state.brand = 'android'; showOther('android'); return; }
     if (tv.brand) setBrand(tv.brand);
     if (!state.tv || state.tv.ip !== tv.ip) samView = { kind: 'idle' };
     state.tv = tv;
@@ -382,7 +386,7 @@
     msg.textContent = T('find.checking');
     api('POST', '/api/check', { ip: ip }).then(function (tv) {
       if (!tv.brand) {
-        tv.brand = state.brand === 'samsung' ? 'samsung' : 'lg';   // still let them try: some TVs answer late
+        tv.brand = state.brand === 'samsung' || state.brand === 'android' ? state.brand : 'lg';   // still let them try: some TVs answer late
         msg.innerHTML = esc(T('find.ip.none')) + ' <button class="link" id="force">' + T('find.try') + '</button>';
         $('#force').addEventListener('click', function () { pick(tv); });
         return;
@@ -396,14 +400,16 @@
   function showChosen() {
     var tv = state.tv;
     if (!tv) return;
-    var sam = tv.brand === 'samsung';
+    var sam = tv.brand === 'samsung', atv = tv.brand === 'android';
     var warn = '';
     if (tv.brand === 'lg' && tv.devMode === false) warn = T('details.devoff');
     else if (tv.brand === 'lg' && tv.keyServer === false) warn = T('details.keyoff');
+    else if (atv && tv.devMode === false && tv.adb !== true) warn = T('details.adboff');
     $('#chosen-tv').innerHTML = T('details.tv', { name: esc(tv.name || brandName(tv.brand || 'lg')), ip: esc(tv.ip) }) + warn;
-    $('#lg-fields').hidden = sam;
-    $('#store-row').hidden = sam;
+    $('#lg-fields').hidden = sam || atv;
+    $('#store-row').hidden = sam || atv;
     $('#samsung-box').hidden = !sam;
+    $('#android-box').hidden = !atv;
     if (sam) drawSamsung();
   }
   redraws.push(showChosen);
@@ -527,15 +533,16 @@
     msg.hidden = true;
     var pass = $('#pass').value.trim();
     if (!state.tv) { go('find'); return; }
-    var sam = state.tv.brand === 'samsung';
-    if (!sam && !/^[A-Za-z0-9]{4,12}$/.test(pass)) { msg.textContent = T('pass.bad'); msg.hidden = false; $('#pass').focus(); return; }
+    var sam = state.tv.brand === 'samsung', atv = state.tv.brand === 'android';
+    if (!sam && !atv && !/^[A-Za-z0-9]{4,12}$/.test(pass)) { msg.textContent = T('pass.bad'); msg.hidden = false; $('#pass').focus(); return; }
     var hide = $$('#services input').filter(function (c) { return !c.checked; }).map(function (c) { return c.value; });
     save('hideServices', hide);
     var settings = {
       hideServices: hide,
       hideAnimation: $('#hideAnimation').checked,
       showCrypto: $('#showCrypto').checked,
-      store: !sam && $('#store').checked,
+      store: !sam && !atv && $('#store').checked,
+      stremio: atv ? $('#stremio').checked : undefined,
       tizenbrew: sam && $('#tizenbrew').checked,
       tmdbKey: $('#tmdb').value.trim(),
       language: 'auto'   // FreeTV on the TV follows the TV's own language
@@ -548,7 +555,7 @@
     }
     this.disabled = true;
     var btn = this;
-    var body = sam ? { brand: 'samsung', ip: state.tv.ip, settings: settings } : { brand: 'lg', ip: state.tv.ip, passphrase: pass, settings: settings };
+    var body = sam || atv ? { brand: state.tv.brand, ip: state.tv.ip, settings: settings } : { brand: 'lg', ip: state.tv.ip, passphrase: pass, settings: settings };
     api('POST', '/api/install', body).then(function (r) {
       state.job = r.job;
       startProgress();
@@ -565,12 +572,15 @@
     var m = /^(\d+) apps$/.exec(note);
     if (m) return T('note.apps', { n: m[1] });
     var known = { 'activada': 'note.on', 'no disponible': 'note.na', 'certificado de Samsung': 'note.cert.samsung',
-      'certificado de Tizen': 'note.cert.tizen', 'ábrela tú desde Apps': 'note.openit', 'no se pudo': 'note.failed' };
+      'certificado de Tizen': 'note.cert.tizen', 'ábrela tú desde Apps': 'note.openit', 'no se pudo': 'note.failed',
+      'hazlo en la tele': 'note.athome', 'ya lo era': 'note.already' };
     return known[note] ? T(known[note]) : note;
   }
   function stepTitle(s) {
     if (s.id === 'store' && /\(/.test(s.title)) return T('step.store.off');   // the installers say "(no activada)" when it is off
     if (s.id === 'tizenbrew' && /no pedido/.test(s.title)) return T('step.tizenbrew.off');
+    if (s.id === 'stremio' && /no pedido/.test(s.title)) return T('step.stremio.off');
+    if (lastJob && lastJob.brand === 'android' && TEXTS[lang]['step.a.' + s.id]) return T('step.a.' + s.id);
     return TEXTS[lang]['step.' + s.id] ? T('step.' + s.id) : s.title;
   }
   function drawJob() {
@@ -581,11 +591,13 @@
         (s.note ? '<span class="note">' + esc(noteText(s.note)) + '</span>' : '') + '</li>';
     }).join('');
     $('#prompt').hidden = !j.prompt;
+    $('#prompt-text').innerHTML = T(j.brand === 'android' ? 'progress.prompt.android' : 'progress.prompt');
     $('#log').textContent = j.log.map(function (l) { return l.text; }).join('\n');
     $('#done').hidden = j.state !== 'done';
-    $('#tips-lg').hidden = j.brand === 'samsung';
+    $('#tips-lg').hidden = j.brand === 'samsung' || j.brand === 'android';
     $('#tips-samsung').hidden = j.brand !== 'samsung';
-    $('#fixes').innerHTML = T(j.brand === 'samsung' ? 'fail.fixes.samsung' : 'fail.fixes');
+    $('#tips-android').hidden = j.brand !== 'android';
+    $('#fixes').innerHTML = T(j.brand === 'samsung' ? 'fail.fixes.samsung' : j.brand === 'android' ? 'fail.fixes.android' : 'fail.fixes');
     $('#failed').hidden = j.state !== 'failed';
     $('#progress-title').textContent = T(j.state === 'done' ? 'progress.done.title' : j.state === 'failed' ? 'progress.failed.title' : 'progress.title');
     if (j.state === 'failed') {

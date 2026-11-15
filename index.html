@@ -261,6 +261,7 @@
     <div class="brand-tabs" role="group">
       <button type="button" class="brand-tab" data-tab="lg"><span class="logo lg">LG</span> LG</button>
       <button type="button" class="brand-tab" data-tab="samsung"><span class="logo samsung">S</span> Samsung</button>
+      <button type="button" class="brand-tab" data-tab="android"><span class="logo android">▶</span> Android TV</button>
     </div>
     <div id="prep-lg">
     <p class="lead" data-t="prep.lead"></p>
@@ -295,6 +296,21 @@
         <div class="tv-cap" data-t="sprep.cap"></div>
       </div>
       <p class="note" data-t="sprep.tip"></p>
+    </div>
+    <div id="prep-android" hidden>
+      <p class="lead" data-t="aprep.lead"></p>
+      <ol class="checklist android-list">
+        <li><label><input type="checkbox"> <span data-t="aprep.1"></span></label></li>
+        <li><label><input type="checkbox"> <span data-t="aprep.2"></span></label></li>
+        <li><label><input type="checkbox"> <span data-t="aprep.3"></span></label></li>
+        <li><label><input type="checkbox"> <span data-t="aprep.4"></span></label></li>
+      </ol>
+      <div class="tv-mock" aria-hidden="true">
+        <div class="tv-row"><span>USB debugging</span><b>On</b></div>
+        <div class="tv-row hl"><span>Allow USB debugging?</span><b>Always allow · OK</b></div>
+        <div class="tv-cap" data-t="aprep.cap"></div>
+      </div>
+      <p class="note" data-t="aprep.tip"></p>
     </div>
     <p class="small"><button class="link" data-go="brand" data-t="prep.other">Not an LG TV?</button></p>
     <div class="row">
@@ -341,6 +357,10 @@
       </div>
       <label class="check"><input type="checkbox" id="tizenbrew" checked> <span><span data-t="opt.tizenbrew"></span>
         <span class="help" data-t="opt.tizenbrew.help"></span></span></label>
+    </div>
+    <div id="android-box" hidden>
+      <label class="check"><input type="checkbox" id="stremio" checked> <span><span data-t="opt.stremio"></span>
+        <span class="help" data-t="opt.stremio.help"></span></span></label>
     </div>
     <div id="lg-fields">
     <label class="field">
@@ -397,13 +417,14 @@
     <h1 id="progress-title"></h1>
     <div id="prompt" class="prompt" hidden>
       <div class="prompt-icon">📺</div>
-      <div data-t="progress.prompt"></div>
+      <div id="prompt-text" data-t="progress.prompt"></div>
     </div>
     <ol id="steps" class="steps"></ol>
     <div id="done" hidden>
       <div class="status ok big-ok">🎉 <span data-t="progress.done"></span></div>
       <ul class="tips" id="tips-lg" data-t="progress.tips"></ul>
       <ul class="tips" id="tips-samsung" data-t="progress.tips.samsung" hidden></ul>
+      <ul class="tips" id="tips-android" data-t="progress.tips.android" hidden></ul>
     </div>
     <div id="failed" hidden>
       <div class="status bad"><span>✗</span> <span id="fail-msg"></span></div>

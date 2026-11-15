@@ -79,7 +79,7 @@ installation stay in Spanish.
 |---|---|
 | **LG (webOS)** | Full automatic install |
 | **Samsung (Tizen, 2017+)** | Automatic install, **experimental** (tested against a pretend Samsung TV, not yet a real one). 2023+ TVs: sign in with a Samsung account. Optional TizenBrew (YouTube AdFree, Twitch AdFree) |
-| Android TV / Google TV | Detected, but not automatic: the app has to be built. Link to Free My TV and to the guide |
+| **Android TV / Google TV** (Sony Bravia, TCL, Philips…) | Automatic install from the **computer program**, **experimental** (tested against a pretend Android TV, not yet a real one): over ADB (USB/network debugging on, the TV asks to allow it), FreeTV's signed APK and, if ticked, Stremio Claude's (torrents included), the page's settings handed to FreeTV and FreeTV made the home screen. The phone app does not install on these yet |
 
 ### Security and privacy
 
@@ -177,7 +177,7 @@ gradle :app:assembleRelease                 # the APK (needs the Android SDK)
   are published here). They work the same.
 - The screenshots and videos on the page are the real ones from FreeTV on an LG OLED (loaded from the FreeTV repository).
 - The passphrase may be typed in capitals or small letters: the installers try both.
-- Android TV / Google TV: only detected, and the page explains what to do.
+- Android TV / Google TV: from the computer program (`connector/src/adb.js`, `androidtv.js`; the APKs come from FreeTV's and Stremio Claude's `android-tv-v*` releases, SHA-256 checked, `scripts/android-apks.js`). The phone app explains it.
 - Samsung with TizenBrew: for TizenBrew to open its apps, *Host PC IP* must then be `127.0.0.1` (the page says so at the end); to
   update FreeTV later, put this device's IP back.
 
@@ -272,7 +272,7 @@ Los instaladores explican los problemas en español; la web tiene su propio text
 |---|---|
 | **LG (webOS)** | Instalación automática completa |
 | **Samsung (Tizen, 2017+)** | Instalación automática, **experimental** (probada contra una Samsung simulada, todavía no en una de verdad). 2023 o más: entrar con una cuenta Samsung. TizenBrew opcional (YouTube AdFree, Twitch AdFree) |
-| Android TV / Google TV | Se detecta, pero no es automático: hay que compilar la app. Enlace a Free My TV y a la guía |
+| **Android TV / Google TV** (Sony Bravia, TCL, Philips…) | Instalación automática desde el **programa del ordenador**, **experimental** (probada contra una Android TV simulada, todavía no en una de verdad): por ADB (depuración USB/por red activada, la tele pide permitirlo), el APK firmado de FreeTV y, si se marca, el de Stremio Claude (con torrents), los ajustes de la página pasan a FreeTV y FreeTV queda como inicio. La app del móvil todavía no instala en estas |
 
 ### Seguridad y privacidad
 
@@ -372,7 +372,7 @@ gradle :app:assembleRelease                 # el APK (necesita el SDK de Android
   publican los paquetes). Funcionan igual.
 - Las capturas y los vídeos de la página son los reales de FreeTV en una LG OLED (se cargan del repositorio de FreeTV).
 - La passphrase se puede escribir en mayúsculas o minúsculas: los instaladores prueban las dos.
-- Android TV / Google TV: solo se detectan y se explica qué hacer.
+- Android TV / Google TV: desde el programa del ordenador (`connector/src/adb.js`, `androidtv.js`; los APK salen de las versiones `android-tv-v*` de FreeTV y Stremio Claude, con el SHA-256 comprobado, `scripts/android-apks.js`). La app del móvil lo explica.
 - Samsung con TizenBrew: para que TizenBrew abra sus apps, *Host PC IP* tiene que pasar a `127.0.0.1` (la web lo dice al final); para
   actualizar FreeTV más adelante, vuelve a poner la IP de este aparato.
 

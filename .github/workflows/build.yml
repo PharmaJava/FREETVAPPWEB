@@ -71,10 +71,12 @@ jobs:
       - name: Build FreeTV's packages
         env:
           TIZEN_AUTHOR: ${{ github.workspace }}/build-data/tizen-author.json
+          GITHUB_TOKEN: ${{ github.token }}   # GitHub's API, for the Android TV APKs of FreeTV's and Stremio Claude's releases
         run: |
           bash connector/scripts/build-bundle.sh "$GITHUB_WORKSPACE/freetv"
           echo "FreeTV commit in these downloads: $(git -C freetv log -1 --format='%h %s')" | tee -a "$GITHUB_STEP_SUMMARY"
           test -f connector/bundle/samsung/certs.json && echo "Samsung: FreeTV.wgt and its certificates are in" | tee -a "$GITHUB_STEP_SUMMARY"
+          test -f connector/bundle/android/FreeTV.apk && echo "Android TV: $(cat connector/bundle/android/versions.json)" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Samsung's certificate service answers (for 2023+ TVs)
         continue-on-error: true
         run: |

@@ -60,6 +60,9 @@ else
   rm -f "$OUT/samsung/certs.json"
 fi
 
+echo "== FreeTV for Android TV (signed APKs from the releases)"
+node "$HERE/scripts/android-apks.js" || echo "!! Android TV APKs not fetched: this bundle cannot install on Android TVs"
+
 python3 - "$FREETV" "$HELPER" "$OUT" <<'PY'
 import json, os, subprocess, sys
 freetv, helper, out = sys.argv[1:]

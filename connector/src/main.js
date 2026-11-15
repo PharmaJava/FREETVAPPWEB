@@ -15,6 +15,7 @@ const scan = require('./scan');
 const lg = require('./lg');
 const samsung = require('./samsung');
 const samsungCert = require('./samsung-cert');
+const androidtv = require('./androidtv');
 
 const VERSION = '1.0.0';
 const PORT = Number(process.env.FREETV_PORT) || 47321;
@@ -44,7 +45,10 @@ function loadBundle() {
   const wgt = asset('bundle/samsung/FreeTV.wgt');
   const certs = asset('bundle/samsung/certs.json');
   const sam = wgt && certs ? Object.assign({ wgt }, JSON.parse(certs.toString('utf8'))) : null;
-  return { info: JSON.parse(info.toString('utf8')), launcher, native, samsung: sam };
+  // Android TV: FreeTV's and Stremio Claude's signed APKs from their releases (scripts/android-apks.js): optional as well.
+  const ftApk = asset('bundle/android/FreeTV.apk'), soApk = asset('bundle/android/StremioClaude.apk'), av = asset('bundle/android/versions.json');
+  const android = ftApk ? { freetv: ftApk, stremio: soApk, versions: av ? JSON.parse(av.toString('utf8')) : {} } : null;
+  return { info: JSON.parse(info.toString('utf8')), launcher, native, samsung: sam, android };
 }
 const bundle = loadBundle();
 
@@ -94,7 +98,7 @@ async function api(req, res, origin) {
     if (origin === SITE_ORIGIN || (origin && origin !== HOME && ORIGINS.has(origin))) sitePinged = Date.now();
     return send(res, 200, { app: 'freetv-conector', version: VERSION, ready: !!bundle,
       freetv: bundle && bundle.info.freetv, launcher: bundle && bundle.info.launcher, busy: !!running,
-      samsung: !!(bundle && bundle.samsung), addresses: scan.networks().map((n) => n.address) }, origin);
+      samsung: !!(bundle && bundle.samsung), android: !!(bundle && bundle.android), addresses: scan.networks().map((n) => n.address) }, origin);
   }
   if (req.method === 'POST' && !/^application\/json\b/.test(req.headers['content-type'] || '')) {
     return send(res, 415, { error: 'JSON only' }, origin);
@@ -106,6 +110,7 @@ async function api(req, res, origin) {
     const tv = await scan.check(ip);
     if (tv.brand === 'samsung') Object.assign(tv, await samsung.inspect(ip));
     if (tv.brand === 'samsung' && !tv.name && tv.info && tv.info.name) tv.name = tv.info.name.replace(/^\[TV\]\s*/, '');
+    if (tv.brand === 'android') Object.assign(tv, await androidtv.inspect(ip));
     return send(res, 200, tv, origin);
   }
   // Samsung TVs of 2023 and newer: the person signs in to their Samsung account (Samsung's page, opened by the web page).
@@ -114,9 +119,19 @@ async function api(req, res, origin) {
   if (route === 'POST /api/install') {
     const b = await readJson(req);
     if (!bundle) return send(res, 500, { error: 'Este conector no trae los paquetes de FreeTV.' }, origin);
-    if (b.brand !== 'lg' && b.brand !== 'samsung') return send(res, 400, { error: 'El programa instala en teles LG y Samsung.' }, origin);
+    if (b.brand !== 'lg' && b.brand !== 'samsung' && b.brand !== 'android') return send(res, 400, { error: 'El programa instala en teles LG, Samsung y Android TV.' }, origin);
     if (!IP.test(b.ip || '')) return send(res, 400, { error: 'La IP no es válida (por ejemplo 192.168.1.140).' }, origin);
     if (running && running.state === 'running') return send(res, 409, { error: 'Ya hay una instalación en marcha.', job: running.id }, origin);
+    if (b.brand === 'android') {
+      if (!bundle.android) return send(res, 500, { error: 'Este programa no trae FreeTV para Android TV: descárgalo otra vez.' }, origin);
+      const settings = Object.assign({}, b.settings || {}, { stremio: !(b.settings && b.settings.stremio === false) });
+      const job = new androidtv.Job(b.ip, settings);
+      jobs.set(job.id, job);
+      running = job;
+      console.log('  ▸ Instalando en la Android TV / Installing on the Android TV ' + job.ip + '…');
+      androidtv.run(job, bundle, settings).then(() => report(job));
+      return send(res, 200, { job: job.id }, origin);
+    }
     if (b.brand === 'samsung') {
       if (!bundle.samsung) return send(res, 500, { error: 'Este programa no trae FreeTV para Samsung: descárgalo otra vez.' }, origin);
       const settings = Object.assign({}, b.settings || {}, { tizenbrew: !!(b.settings && b.settings.tizenbrew === true) });
