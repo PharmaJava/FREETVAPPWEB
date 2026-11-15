@@ -135,8 +135,8 @@
     'tvs.lg.p': 'FreeTV está probado en una LG OLED. Esta web lo instala por ti, con botón Home propio, tienda de apps y actualizaciones.',
     'tvs.sa.h': 'Samsung (Tizen, 2017 o más)', 'tvs.sa.tag': 'Instalación automática · experimental',
     'tvs.sa.p': 'La misma pantalla y, si quieres, TizenBrew con YouTube AdFree y Twitch AdFree. Esta web lo instala: escribes 1 2 3 4 5 en Apps de la tele y pulsas Instalar. En teles de 2023 o más Samsung pide entrar con tu cuenta Samsung (para firmar la app). Es la misma versión que en LG (2.12), pero sin lo que necesita el servicio que solo existe en LG: el botón Home, la Tienda de webOS y las apps de GitHub, Continuar viendo con Stremio, Jellyfin y Plex, la memoria y la autoactualización. Probado con una Samsung simulada, todavía no con una de verdad.',
-    'tvs.an.h': 'Android TV y Google TV', 'tvs.an.tag': 'Con la app de Free My TV',
-    'tvs.an.p': 'Sony, TCL, Xiaomi, Philips, Chromecast con Google TV… FreeTV incluye la app de Free My TV, que hay que compilar: todavía no es automático.',
+    'tvs.an.h': 'Android TV y Google TV', 'tvs.an.tag': 'App propia · experimental',
+    'tvs.an.p': 'Sony Bravia, TCL, Xiaomi, Philips, Chromecast con Google TV… La misma pantalla de FreeTV en una app para Android TV que se pone como inicio de la tele, con Stremio Origin en el estante (FreeTV lo instala desde GitHub). Se instala el APK a mano (Downloader, un USB o adb): esta web todavía no lo hace sola. Aún sin probar en una Bravia de verdad.',
     'tvs.note': '¿Samsung hasta 2016, Fire TV, Roku o Apple TV? No se puede; un reproductor Google TV por HDMI sí sirve. Para ser claros: el instalador de esta web está probado con teles simuladas (LG y Samsung), y FreeTV con una LG OLED.',
 
     'faq.h2': 'Preguntas frecuentes',
@@ -298,8 +298,8 @@
     'tvs.lg.p': 'FreeTV is tested on an LG OLED. This site installs it for you, with its own Home button, an app store and updates.',
     'tvs.sa.h': 'Samsung (Tizen, 2017 or newer)', 'tvs.sa.tag': 'Automatic install · experimental',
     'tvs.sa.p': 'The same screen and, if you like, TizenBrew with YouTube AdFree and Twitch AdFree. This site installs it: you type 1 2 3 4 5 in the TV\'s Apps and press Install. On 2023 and newer TVs Samsung asks you to sign in with your Samsung account (to sign the app). It is the same version as on LG (2.12), but without what needs the service that only exists on LG: the Home button, the webOS Store and GitHub apps, Continue watching with Stremio, Jellyfin and Plex, memory and self-update. Tested with a simulated Samsung, not yet with a real one.',
-    'tvs.an.h': 'Android TV and Google TV', 'tvs.an.tag': 'With Free My TV\'s app',
-    'tvs.an.p': 'Sony, TCL, Xiaomi, Philips, Chromecast with Google TV… FreeTV includes Free My TV\'s app, which has to be built: not automatic yet.',
+    'tvs.an.h': 'Android TV and Google TV', 'tvs.an.tag': 'Its own app · experimental',
+    'tvs.an.p': 'Sony Bravia, TCL, Xiaomi, Philips, Chromecast with Google TV… The same FreeTV home in an Android TV app that becomes the TV\'s home screen, with Stremio Origin on the shelf (FreeTV installs it from GitHub). You install the APK by hand (Downloader, a USB drive or adb): this site does not do it by itself yet. Not tried on a real Bravia yet.',
     'tvs.note': 'Samsung up to 2016, Fire TV, Roku or Apple TV? Not possible; a Google TV streamer on HDMI does work. To be clear: this site\'s installer is tested with simulated TVs (LG and Samsung), and FreeTV with an LG OLED.',
 
     'faq.h2': 'Frequently asked questions',
