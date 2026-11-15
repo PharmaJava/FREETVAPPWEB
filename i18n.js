@@ -181,7 +181,7 @@ window.FREETV_TEXTS = {
     'err.configure': `El ayudante del botón Home no aparece instalado en la tele. Vuelve a intentarlo.`,
     'err.other': `Algo falló.`,
 
-    'footer': `FreeTV es libre (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">Código de FreeTV</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">Código de esta web</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB/releases/tag/descargas" target="_blank" rel="noopener">Descargas</a> · No está afiliado a LG ni a Samsung. Tus datos no salen de tu casa: la passphrase solo va de tu móvil (o tu ordenador) a la tele.`,
+    'footer': `FreeTV es libre (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">Código de FreeTV</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">Código de esta web</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB/releases/tag/descargas" target="_blank" rel="noopener">Descargas</a> · No está afiliado a LG, Samsung, Sony ni Google. Tus datos no salen de tu casa: la passphrase solo va de tu móvil (o tu ordenador) a la tele.`,
     /* ---- Samsung ---- */
     'prep.which': `¿Qué tele tienes?`,
     'or': ` o `,
@@ -427,7 +427,7 @@ window.FREETV_TEXTS = {
     'err.configure': `The Home button helper does not appear installed on the TV. Try again.`,
     'err.other': `Something went wrong.`,
 
-    'footer': `FreeTV is free software (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">FreeTV's code</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">This site's code</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB/releases/tag/descargas" target="_blank" rel="noopener">Downloads</a> · Not affiliated with LG or Samsung. Your data stays at home: the passphrase only goes from your phone (or your computer) to the TV.`,
+    'footer': `FreeTV is free software (MIT) · <a href="https://github.com/PharmaJava/FreeTV" target="_blank" rel="noopener">FreeTV's code</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB" target="_blank" rel="noopener">This site's code</a> · <a href="https://github.com/PharmaJava/FREETVAPPWEB/releases/tag/descargas" target="_blank" rel="noopener">Downloads</a> · Not affiliated with LG, Samsung, Sony or Google. Your data stays at home: the passphrase only goes from your phone (or your computer) to the TV.`,
     /* ---- Samsung ---- */
     'prep.which': `Which TV do you have?`,
     'or': ` or `,
